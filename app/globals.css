@@ -1,0 +1,408 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #1a202c;
+  --primary: #1e40af;
+  --primary-dark: #1e3a8a;
+  --primary-light: #3b82f6;
+  --secondary: #64748b;
+  --accent: #06b6d4;
+  --accent-light: #22d3ee;
+  --success: #059669;
+  --success-light: #10b981;
+  --warning: #d97706;
+  --warning-light: #f59e0b;
+  --error: #dc2626;
+  --error-light: #ef4444;
+
+  /* Pharmaceutical color palette */
+  --pharma-blue: #1e40af;
+  --pharma-blue-light: #3b82f6;
+  --pharma-blue-dark: #1e3a8a;
+  --pharma-green: #059669;
+  --pharma-green-light: #10b981;
+  --pharma-green-dark: #047857;
+  --pharma-gray: #64748b;
+  --pharma-gray-light: #94a3b8;
+  --pharma-gray-dark: #475569;
+  --pharma-slate: #334155;
+  --pharma-slate-light: #64748b;
+
+  --font-geist-sans: var(--font-geist-sans);
+  --font-geist-mono: var(--font-geist-mono);
+}
+
+body {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 25%, #e2e8f0 100%);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Professional card styling with pharmaceutical aesthetic */
+.card-professional {
+  background: white;
+  border-radius: 16px;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(8px);
+}
+
+.card-professional:hover {
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(30, 64, 175, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Medical-themed button styles with pharmaceutical gradients */
+.btn-primary {
+  background: linear-gradient(135deg, var(--pharma-blue) 0%, var(--pharma-blue-dark) 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  box-shadow:
+    0 1px 3px 0 rgba(30, 64, 175, 0.3),
+    0 1px 2px 0 rgba(30, 64, 175, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--pharma-blue-dark) 0%, #1e3a8a 100%);
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 12px 0 rgba(30, 64, 175, 0.4),
+    0 2px 4px 0 rgba(30, 64, 175, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow:
+    0 1px 2px 0 rgba(30, 64, 175, 0.3);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, var(--pharma-green) 0%, var(--pharma-green-dark) 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  box-shadow:
+    0 1px 3px 0 rgba(5, 150, 105, 0.3),
+    0 1px 2px 0 rgba(5, 150, 105, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-success::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-success:hover::before {
+  left: 100%;
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, var(--pharma-green-dark) 0%, #065f46 100%);
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 12px 0 rgba(5, 150, 105, 0.4),
+    0 2px 4px 0 rgba(5, 150, 105, 0.3);
+}
+
+.btn-success:active {
+  transform: translateY(0);
+  box-shadow:
+    0 1px 2px 0 rgba(5, 150, 105, 0.3);
+}
+
+/* Professional form styling */
+.form-professional input,
+.form-professional select,
+.form-professional textarea {
+  border: 2px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+.form-professional input:focus,
+.form-professional select:focus,
+.form-professional textarea:focus {
+  border-color: var(--pharma-blue);
+  box-shadow:
+    0 0 0 3px rgba(30, 64, 175, 0.1),
+    0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  outline: none;
+  background: white;
+}
+
+.form-professional input::placeholder,
+.form-professional textarea::placeholder {
+  color: var(--pharma-gray-light);
+  font-weight: 400;
+}
+
+/* Status indicators with pharmaceutical colors */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(4px);
+}
+
+.status-completed {
+  background: rgba(5, 150, 105, 0.1);
+  color: var(--pharma-green);
+  border: 1px solid rgba(5, 150, 105, 0.2);
+}
+
+.status-pending {
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--warning);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+}
+
+.status-active {
+  background: rgba(30, 64, 175, 0.1);
+  color: var(--pharma-blue);
+  border: 1px solid rgba(30, 64, 175, 0.2);
+}
+
+/* Smooth animations and micro-interactions */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Loading skeleton styles */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+.skeleton-text {
+  height: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-title {
+  height: 1.5rem;
+  width: 60%;
+  margin-bottom: 1rem;
+}
+
+.skeleton-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+}
+
+/* Enhanced hover effects */
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+}
+
+/* Progress bar styles */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--pharma-blue), var(--pharma-blue-light));
+  border-radius: 4px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Enhanced focus states for accessibility */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.3);
+}
+
+/* Responsive design utilities */
+@media (max-width: 768px) {
+  .card-professional {
+    margin: 0 1rem;
+    border-radius: 12px;
+  }
+
+  .btn-primary, .btn-success {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .grid-responsive {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+  }
+
+  .card-professional {
+    padding: 1rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+  }
+}
+
+/* Print styles for pharmaceutical compliance */
+@media print {
+  .card-professional {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+
+  .btn-primary, .btn-success {
+    display: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .card-professional {
+    border: 2px solid #000;
+  }
+
+  .btn-primary {
+    background: #000;
+    color: #fff;
+    border: 2px solid #000;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-pulse-slow,
+  .shimmer,
+  .hover-lift,
+  .btn-primary::before,
+  .btn-success::before {
+    animation: none;
+    transition: none;
+  }
+
+  .card-professional {
+    transition: none;
+  }
+}

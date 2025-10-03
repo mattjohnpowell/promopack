@@ -1,0 +1,23 @@
+<svg width="255" height="60" viewBox="0 0 255 60" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <title>PromoPack Logo</title>
+  <desc>A solid blue document icon with a white medical cross, next to the text "PromoPack".</desc>
+  
+  <g fill="#1e40af">
+  
+    <g id="promopack-icon">
+      <path d="M8,0 L40,0 L60,20 L60,52 C60,56.42 56.42,60 52,60 L8,60 C3.58,60 0,56.42 0,52 L0,8 C0,3.58 3.58,0 8,0 Z"/>
+      
+      <path d="M18,26 H42 V34 H18 Z M26,18 H34 V42 H26 Z" fill="#ffffff"/>
+    </g>
+    
+    <text 
+      x="75" 
+      y="41" 
+      font-family="Helvetica, Arial, sans-serif" 
+      font-size="30" 
+      font-weight="bold">
+      PromoPack
+    </text>
+    
+  </g>
+</svg>

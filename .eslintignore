@@ -1,0 +1,7 @@
+# Ignore generated Prisma runtime and other build artifacts
+# Ignore generated Prisma runtime and other build artifacts
+generated/
+node_modules/
+.next/
+.dist/
+.DS_Store

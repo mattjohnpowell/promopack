@@ -1,0 +1,194 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  name          String?
+  password      String?
+  accountId     String?
+  projects      Project[]
+  seats         Seat[]
+  account       Account?  @relation(fields: [accountId], references: [id])
+}
+
+model Project {
+  id        String     @id @default(cuid())
+  name      String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  userId    String
+  claims    Claim[]
+  documents Document[]
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Document {
+  id                  String    @id @default(cuid())
+  name                String
+  url                 String?
+  type                DocType
+  projectId           String
+  abstract            String?
+  authors             String?
+  doi                 String?   @unique
+  issue               String?
+  journal             String?
+  pages               String?
+  pubmedId            String?   @unique
+  pubmedUrl           String?
+  title               String?
+  volume              String?
+  year                Int?
+  acceptedAt          DateTime?
+  autoFoundForClaimId String?
+  confidenceScore     Float?
+  isAutoFound         Boolean   @default(false)
+  source              DocSource @default(USER_UPLOADED)
+  suggestedAt         DateTime?
+  project             Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  links               Link[]
+}
+
+model Claim {
+  id              String  @id @default(cuid())
+  text            String
+  page            Int
+  projectId       String
+  auditReasoning  String?
+  confidenceScore Float?
+  needsReview     Boolean @default(false)
+  project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  links           Link[]
+}
+
+model Link {
+  id         String   @id @default(cuid())
+  claimId    String
+  documentId String
+  claim      Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([claimId, documentId])
+}
+
+model Account {
+  id              String           @id @default(cuid())
+  name            String
+  companyId       String?          @unique
+  billingEmail    String?
+  currency        String           @default("USD")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  billingContacts BillingContact[]
+  invoices        Invoice[]
+  subscriptions   Subscription[]
+  users           User[]
+}
+
+model BillingContact {
+  id        String  @id @default(cuid())
+  accountId String
+  name      String
+  email     String
+  phone     String?
+  address   String?
+  vatId     String?
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id         String    @id @default(cuid())
+  accountId  String
+  stripeId   String    @unique
+  status     String
+  priceId    String
+  interval   String
+  seatCount  Int       @default(1)
+  startedAt  DateTime  @default(now())
+  canceledAt DateTime?
+  seats      Seat[]
+  account    Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id        String    @id @default(cuid())
+  accountId String
+  stripeId  String?   @unique
+  number    String?
+  amount    Int
+  currency  String    @default("USD")
+  status    String
+  dueDate   DateTime?
+  issuedAt  DateTime  @default(now())
+  pdfUrl    String?
+  account   Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  payments  Payment[]
+}
+
+model Payment {
+  id        String    @id @default(cuid())
+  invoiceId String?
+  stripeId  String?   @unique
+  amount    Int
+  currency  String    @default("USD")
+  method    String?
+  status    String
+  paidAt    DateTime?
+  invoice   Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model Seat {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  userId         String
+  role           String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  stripeId    String   @unique
+  name        String
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  prices      Price[]
+}
+
+model Price {
+  id            String   @id @default(cuid())
+  stripeId      String   @unique
+  productId     String
+  amount        Int
+  currency      String   @default("usd")
+  interval      String?
+  intervalCount Int?
+  type          String
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+enum DocSource {
+  USER_UPLOADED
+  PUBMED_AUTO
+  PUBMED_MANUAL
+  LIBRARY_REUSED
+}
+
+enum DocType {
+  SOURCE
+  REFERENCE
+}
