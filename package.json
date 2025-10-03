@@ -24,7 +24,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hot-toast": "^2.6.0",
-    "react-pdf": "^10.1.0",
+    "react-pdf": "^9.2.1",
     "stripe": "^18.5.0",
     "zod": "^4.1.11"
   },
