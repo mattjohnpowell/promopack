@@ -1230,9 +1230,15 @@ export async function searchPubMedForClaim(claimId: string, projectId: string) {
     throw new Error("User not found")
   }
 
-  // Verify project ownership
+  // Verify project ownership and get source document for context
   const project = await prisma.project.findFirst({
     where: { id: projectId, userId: user.id },
+    include: {
+      documents: {
+        where: { type: 'SOURCE' },
+        take: 1 // Get first source document for product context
+      }
+    }
   })
 
   if (!project) {
@@ -1251,12 +1257,16 @@ export async function searchPubMedForClaim(claimId: string, projectId: string) {
   try {
     console.log(`Searching PubMed for claim: "${claim.text.substring(0, 100)}..."`)
 
-    // Extract keywords and search PubMed
-    const keywords = extractMedicalKeywords(claim.text)
+    // Extract product context from source document name (e.g., "XARELTO-pi.pdf" -> "XARELTO")
+    const productContext = project.documents[0]?.name || ''
+    console.log(`Product context: ${productContext}`)
+
+    // Extract keywords and search PubMed (now includes product context)
+    const keywords = extractMedicalKeywords(claim.text, productContext)
     console.log(`Extracted keywords: ${keywords}`)
 
     const articles = await searchPubMed(keywords, {
-      maxResults: 5,
+      maxResults: 10, // Increased from 5 to get more candidates before filtering
       minYear: 2010, // Last ~15 years of research
       studyTypes: [
         'Randomized Controlled Trial',
@@ -1271,22 +1281,25 @@ export async function searchPubMedForClaim(claimId: string, projectId: string) {
       return { articles: [], claimId }
     }
 
-    // Score articles by relevance
-    const scoredArticles = articles.map(article => ({
-      ...article,
-      relevanceScore: scoreArticleRelevance(article, claim.text)
-    }))
+    // Score articles by relevance (now async and includes product context)
+    const scoredArticles = await Promise.all(
+      articles.map(async (article) => ({
+        ...article,
+        relevanceScore: await scoreArticleRelevance(article, claim.text, productContext)
+      }))
+    )
 
-    // Sort by relevance
+    // Sort by relevance and take top 5
     scoredArticles.sort((a, b) => b.relevanceScore - a.relevanceScore)
+    const topArticles = scoredArticles.slice(0, 5)
 
-    console.log(`Found ${scoredArticles.length} PubMed articles, relevance scores:`,
-      scoredArticles.map(a => `${a.pubmedId}: ${a.relevanceScore.toFixed(2)}`))
+    console.log(`Found ${topArticles.length} PubMed articles, relevance scores:`,
+      topArticles.map(a => `${a.pubmedId}: ${a.relevanceScore.toFixed(2)}`))
 
     // Create suggested documents (not yet accepted)
     const suggestedDocs = []
 
-    for (const article of scoredArticles) {
+    for (const article of topArticles) {
       // Check if this PMID already exists in project
       const existing = await prisma.document.findFirst({
         where: {

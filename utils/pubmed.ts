@@ -197,8 +197,8 @@ export async function fetchArticleAbstract(pmid: string): Promise<string | undef
 /**
  * Extract medical/scientific keywords from claim text for better search
  */
-export function extractMedicalKeywords(claimText: string): string {
-  // Remove common filler words
+export function extractMedicalKeywords(claimText: string, productContext?: string): string {
+  // Remove common filler words (but keep medical/statistical terms)
   const stopWords = [
     'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
     'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been',
@@ -206,6 +206,23 @@ export function extractMedicalKeywords(claimText: string): string {
     'could', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those'
   ]
 
+  // Extract drug/product names (often capitalized or in specific patterns)
+  const drugNames = claimText.match(/\b[A-Z]{2,}[A-Z0-9-]*\b/g) || [] // All caps (e.g., XARELTO, COVID-19)
+  const tradenames = claimText.match(/\b[A-Z][a-z]+[A-Z][a-z]+\b/g) || [] // CamelCase trade names
+
+  // Prioritize medical terms (capitalized in original)
+  const medicalTerms = claimText
+    .match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b/g) || [] // Capitalized phrases
+
+  // Extract percentages and statistical values
+  const percentages = claimText.match(/\d+\.?\d*\s*%/g) || []
+  const numbers = claimText.match(/\b\d+\.?\d*\b/g) || []
+
+  // Medical suffixes/patterns (e.g., -mab, -tinib, -pril, etc.)
+  const medicalSuffixes = /\b\w+(?:mab|tinib|pril|olol|statin|cycline|cillin|azole|itis|osis|emia|pathy)\b/gi
+  const medicalWords = claimText.match(medicalSuffixes) || []
+
+  // Extract key content words (not stop words)
   const words = claimText
     .toLowerCase()
     .replace(/[^\w\s-]/g, ' ') // Keep hyphens for medical terms
@@ -213,20 +230,24 @@ export function extractMedicalKeywords(claimText: string): string {
     .filter(word => word.length > 3)
     .filter(word => !stopWords.includes(word))
 
-  // Prioritize medical terms (capitalized in original, numbers/percentages, medical suffixes)
-  const medicalTerms = claimText
-    .match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b/g) || [] // Capitalized phrases
+  // Add product context (e.g., from source document name)
+  const contextWords = productContext
+    ? productContext
+        .replace(/[-_\.]/g, ' ')
+        .split(/\s+/)
+        .filter(w => w.length > 3 && !stopWords.includes(w.toLowerCase()))
+    : []
 
-  const percentages = claimText.match(/\d+\.?\d*\s*%/g) || []
-  const numbers = claimText.match(/\b\d+\.?\d*\b/g) || []
-
-  // Combine all keywords
+  // Combine all keywords with priority order
   const allKeywords = [
     ...new Set([
+      ...drugNames, // Highest priority: drug/product names
+      ...contextWords.slice(0, 3), // Product context
       ...medicalTerms.map(t => t.toLowerCase()),
-      ...words.slice(0, 10), // Top 10 keywords
+      ...medicalWords.map(w => w.toLowerCase()),
+      ...words.slice(0, 12), // More keywords for better matching
       ...percentages,
-      ...numbers.slice(0, 3) // Max 3 numbers
+      ...numbers.slice(0, 3)
     ])
   ]
 
@@ -234,41 +255,107 @@ export function extractMedicalKeywords(claimText: string): string {
 }
 
 /**
- * Score article relevance to claim using simple text matching
+ * Score article relevance to claim using improved semantic matching
  */
-export function scoreArticleRelevance(article: PubMedArticle, claimText: string): number {
+export async function scoreArticleRelevance(
+  article: PubMedArticle, 
+  claimText: string,
+  productContext?: string
+): Promise<number> {
   const claimLower = claimText.toLowerCase()
   const titleLower = article.title.toLowerCase()
-  const abstractLower = article.abstract?.toLowerCase() || ''
+  
+  // Fetch abstract if not present (crucial for good scoring)
+  let abstractLower = article.abstract?.toLowerCase() || ''
+  if (!abstractLower && article.pubmedId) {
+    const fetchedAbstract = await fetchArticleAbstract(article.pubmedId)
+    if (fetchedAbstract) {
+      article.abstract = fetchedAbstract
+      abstractLower = fetchedAbstract.toLowerCase()
+    }
+  }
 
   let score = 0
 
-  // Extract key terms from claim
-  const claimWords = extractMedicalKeywords(claimText)
+  // Extract key terms from claim (with product context)
+  const keywords = extractMedicalKeywords(claimText, productContext)
+  const claimWords = keywords
     .toLowerCase()
     .split(/\s+/)
-    .filter(w => w.length > 3)
+    .filter(w => w.length > 2)
 
-  // Check title matches
+  // HIGH PRIORITY: Product/drug name matching
+  const drugNames = claimText.match(/\b[A-Z]{2,}[A-Z0-9-]*\b/g) || []
+  const productWords = productContext
+    ? productContext
+        .replace(/[-_\.]/g, ' ')
+        .split(/\s+/)
+        .filter(w => w.length > 3)
+    : []
+
+  // Check for drug/product names in title (very strong signal)
+  for (const drug of [...drugNames, ...productWords]) {
+    if (titleLower.includes(drug.toLowerCase())) {
+      score += 0.4 // Strong boost for product name in title
+    }
+    if (abstractLower.includes(drug.toLowerCase())) {
+      score += 0.2 // Boost for product name in abstract
+    }
+  }
+
+  // MEDIUM PRIORITY: Medical terms and statistical values
+  const percentages = claimText.match(/\d+\.?\d*\s*%/g) || []
+  const statisticalTerms = ['randomized', 'trial', 'rct', 'controlled', 'placebo', 
+                             'efficacy', 'safety', 'adverse', 'event', 'outcome']
+
+  for (const pct of percentages) {
+    if (titleLower.includes(pct) || abstractLower.includes(pct)) {
+      score += 0.15 // Matching specific percentages is a strong signal
+    }
+  }
+
+  for (const term of statisticalTerms) {
+    if (titleLower.includes(term) && claimLower.includes(term)) {
+      score += 0.1
+    }
+  }
+
+  // STANDARD PRIORITY: General keyword matching
+  let titleMatches = 0
+  let abstractMatches = 0
+
   for (const word of claimWords) {
     if (titleLower.includes(word)) {
-      score += 0.2 // Each keyword in title = +0.2
+      titleMatches++
+      score += 0.15 // Reduced from 0.2, but we count more keywords
     }
-  }
-
-  // Check abstract matches (if available)
-  for (const word of claimWords) {
     if (abstractLower.includes(word)) {
-      score += 0.1 // Each keyword in abstract = +0.1
+      abstractMatches++
+      score += 0.08 // Slightly reduced from 0.1
     }
   }
 
-  // Boost for recent publications
+  // Boost if many keywords match (indicates strong topical relevance)
+  const matchRatio = (titleMatches + abstractMatches) / Math.max(claimWords.length, 1)
+  if (matchRatio > 0.5) {
+    score += 0.2 // Bonus for high keyword coverage
+  } else if (matchRatio > 0.3) {
+    score += 0.1
+  }
+
+  // Penalize if NO abstract is available (lower confidence)
+  if (!abstractLower) {
+    score *= 0.7 // 30% penalty for missing abstract
+  }
+
+  // Boost for recent publications (within last 10 years)
   if (article.year) {
     const currentYear = new Date().getFullYear()
     const age = currentYear - article.year
-    if (age <= 5) score += 0.2
-    else if (age <= 10) score += 0.1
+    if (age <= 3) score += 0.15      // Very recent
+    else if (age <= 5) score += 0.1  // Recent
+    else if (age <= 10) score += 0.05 // Moderately recent
+    // Older than 10 years: no boost
   }
 
   // Cap at 1.0
