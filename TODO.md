@@ -11,6 +11,8 @@ We prefer a feature-first testing approach: build a feature, manually verify it,
 - [x] Set up Next.js project with App Router, Tailwind CSS, Prisma, and Next-Auth v5
 - [x] Configure PostgreSQL database with Prisma schema (User, Project, Document, Claim, Link models)
 - [x] Implement authentication with Next-Auth v5 (login/logout, route protection)
+- [x] Add magic link authentication and password reset via Resend
+- [x] Improve sign-in error handling and user feedback
 - [x] Create user dashboard showing projects overview
 - [x] Implement project creation (createProject server action)
 - [x] Add file upload functionality with blob storage integration (generateUploadUrl, createDocument server actions)
@@ -18,6 +20,7 @@ We prefer a feature-first testing approach: build a feature, manually verify it,
 - [x] Develop claim & linking workspace UI (interactive component for linking claims to references)
 - [x] Implement PDF pack generation (generatePack server action using PDF-Lib)
 - [ ] Set up deployment on Coolify with environment variables
+- [ ] Configure Resend for production emails (verify domain, add API key)
 
 ## UI/UX Enhancements
 - [x] Design modern, professional UI with pharmaceutical industry aesthetic (clean, trustworthy, efficient)

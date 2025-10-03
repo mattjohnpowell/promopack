@@ -3,9 +3,8 @@ import { signIn } from "next-auth/react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
-export function SignIn() {
+export function MagicLinkSignIn() {
   const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -16,23 +15,21 @@ export function SignIn() {
     setError(null)
 
     try {
-      const result = await signIn("credentials", {
+      const result = await signIn("resend", {
         email,
-        password,
-        redirect: false
+        redirect: false,
+        callbackUrl: "/dashboard",
       })
 
       if (result?.error) {
-        console.error("Sign in error:", result.error)
-        setError("Invalid email or password")
-      } else if (result?.ok) {
-        // Redirect to dashboard on successful sign in
-        router.push("/dashboard")
-        router.refresh()
+        setError("Failed to send magic link. Please try again.")
+      } else {
+        // Redirect to verify-request page
+        router.push("/auth/verify-request")
       }
     } catch (error) {
-      console.error("Sign in error:", error)
-      setError("An error occurred during sign in")
+      console.error("Magic link error:", error)
+      setError("An error occurred. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -41,37 +38,18 @@ export function SignIn() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="credentials-email" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="magic-email" className="block text-sm font-medium text-gray-700">
           Email
         </label>
         <input
           type="email"
-          id="credentials-email"
+          id="magic-email"
           name="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        />
-      </div>
-
-      <div>
-        <div className="flex justify-between items-center">
-          <label htmlFor="credentials-password" className="block text-sm font-medium text-gray-700">
-            Password
-          </label>
-          <a href="/auth/reset-password" className="text-sm text-blue-600 hover:text-blue-500">
-            Forgot password?
-          </a>
-        </div>
-        <input
-          type="password"
-          id="credentials-password"
-          name="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          placeholder="you@example.com"
         />
       </div>
 
@@ -86,8 +64,12 @@ export function SignIn() {
         disabled={isLoading}
         className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isLoading ? "Signing In..." : "Sign In"}
+        {isLoading ? "Sending..." : "Send Magic Link"}
       </button>
+
+      <div className="text-xs text-gray-500 text-center">
+        We'll send you a link to sign in without a password
+      </div>
     </form>
   )
 }

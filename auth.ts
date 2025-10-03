@@ -1,11 +1,15 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
+import Resend from "next-auth/providers/resend"
+import { PrismaAdapter } from "@auth/prisma-adapter"
 import { signInSchema } from "./lib/zod"
 import { prisma } from "./utils/db"
  
 export const { handlers, auth } = NextAuth({
+  adapter: PrismaAdapter(prisma),
   pages: {
     signIn: "/auth",
+    verifyRequest: "/auth/verify-request", // Page shown after magic link is sent
   },
   session: {
     strategy: "jwt",
@@ -26,6 +30,10 @@ export const { handlers, auth } = NextAuth({
     },
   },
   providers: [
+    Resend({
+      apiKey: process.env.AUTH_RESEND_KEY,
+      from: process.env.EMAIL_FROM || "noreply@promopack.com",
+    }),
     Credentials({
       // You can specify which fields should be submitted, by adding keys to the `credentials` object.
       // e.g. domain, username, password, 2FA token, etc.
