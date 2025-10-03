@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { acceptSuggestedReference, rejectSuggestedReference } from "@/app/actions"
+import { acceptSuggestedReference, rejectSuggestedReference, rescoreAutoFoundReferences } from "@/app/actions"
 import toast from "react-hot-toast"
 import { useRouter } from "next/navigation"
 
@@ -42,6 +42,7 @@ export function SuggestedReferencesPanel({
   claimsMap
 }: SuggestedReferencesPanelProps) {
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set())
+  const [isRescoring, setIsRescoring] = useState(false)
   const router = useRouter()
 
   if (suggestedReferences.length === 0) {
@@ -82,6 +83,19 @@ export function SuggestedReferencesPanel({
     }
   }
 
+  const handleRescore = async () => {
+    setIsRescoring(true)
+    try {
+      const result = await rescoreAutoFoundReferences(projectId)
+      toast.success(`${result.message}`, { duration: 4000 })
+      router.refresh()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to re-score references')
+    } finally {
+      setIsRescoring(false)
+    }
+  }
+
   const getConfidenceColor = (score: number | null | undefined) => {
     if (score == null) return 'text-gray-500'
     if (score >= 0.7) return 'text-green-600'
@@ -111,6 +125,17 @@ export function SuggestedReferencesPanel({
             Review and accept relevant ones.
           </p>
         </div>
+        <button
+          onClick={handleRescore}
+          disabled={isRescoring}
+          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+          title="Re-score all suggestions with improved algorithm"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          {isRescoring ? 'Re-scoring...' : 'Re-score with New Algorithm'}
+        </button>
       </div>
 
       <div className="space-y-3">

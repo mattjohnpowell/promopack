@@ -110,11 +110,26 @@ After these improvements:
 
 ## Testing Recommendations
 
-1. **Re-run auto-find** for the existing Xylo project
-2. **Check new relevance scores** in the UI
-3. **Verify abstracts** are being fetched and displayed
-4. **Confirm XARELTO-specific papers** are now being suggested
+### For New Projects
+1. **Extract claims** from your source document
+2. **Run auto-find** for references
+3. **Check new relevance scores** in the UI
+4. **Verify abstracts** are being fetched and displayed
+5. **Confirm product-specific papers** are being suggested
+
+### For Existing Projects (like Xylo)
+1. **Click "Re-score with New Algorithm"** button in the Suggested References section
+2. **Wait for re-scoring to complete** (~300ms per reference to avoid rate limiting)
+3. **Review updated relevance scores** - you should see significant improvements
+4. **Accept/reject references** based on new scores
 5. **Monitor PubMed API rate limits** (now fetching abstracts more frequently)
+
+The re-scoring feature will:
+- ✅ Apply the new scoring algorithm to existing suggestions
+- ✅ Fetch missing abstracts from PubMed
+- ✅ Use product context from your source document name
+- ✅ Update confidence scores in the database
+- ✅ Only re-score pending suggestions (not already accepted ones)
 
 ## Future Enhancements
 

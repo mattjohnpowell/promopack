@@ -1570,6 +1570,116 @@ export async function rejectSuggestedReference(documentId: string, projectId: st
 }
 
 /**
+ * Re-score existing auto-found PubMed references with improved algorithm
+ */
+export async function rescoreAutoFoundReferences(projectId: string) {
+  const session = await auth()
+  if (!session?.user?.email) {
+    throw new Error("Unauthorized")
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  })
+
+  if (!user) {
+    throw new Error("User not found")
+  }
+
+  // Verify project ownership and get source document for context
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, userId: user.id },
+    include: {
+      documents: {
+        where: { 
+          OR: [
+            { type: 'SOURCE' },
+            { isAutoFound: true, acceptedAt: null } // Unaccepted suggestions only
+          ]
+        }
+      },
+      claims: true
+    }
+  })
+
+  if (!project) {
+    throw new Error("Project not found or access denied")
+  }
+
+  // Extract product context from source document
+  const sourceDoc = project.documents.find(d => d.type === 'SOURCE')
+  const productContext = sourceDoc?.name || ''
+
+  // Get auto-found documents that haven't been accepted yet
+  const autoFoundDocs = project.documents.filter(d => d.isAutoFound && !d.acceptedAt)
+
+  if (autoFoundDocs.length === 0) {
+    return {
+      projectId,
+      message: 'No auto-found references to re-score',
+      updated: 0
+    }
+  }
+
+  console.log(`Re-scoring ${autoFoundDocs.length} auto-found references with product context: ${productContext}`)
+
+  let updated = 0
+
+  for (const doc of autoFoundDocs) {
+    // Find the claim this was suggested for
+    const claim = project.claims.find(c => c.id === doc.autoFoundForClaimId)
+    if (!claim) {
+      console.log(`Claim not found for document ${doc.id}, skipping`)
+      continue
+    }
+
+    // Re-score with improved algorithm
+    const article = {
+      pubmedId: doc.pubmedId || '',
+      doi: doc.doi || undefined,
+      title: doc.title || doc.name,
+      authors: doc.authors ? JSON.parse(doc.authors as string) : [],
+      journal: doc.journal || undefined,
+      year: doc.year || undefined,
+      volume: doc.volume || undefined,
+      issue: doc.issue || undefined,
+      pages: doc.pages || undefined,
+      abstract: doc.abstract || undefined,
+      pubmedUrl: doc.pubmedUrl || `https://pubmed.ncbi.nlm.nih.gov/${doc.pubmedId}/`
+    }
+
+    const newScore = await scoreArticleRelevance(article, claim.text, productContext)
+
+    console.log(`Document ${doc.id} (${doc.pubmedId}): old score ${doc.confidenceScore?.toFixed(2)} -> new score ${newScore.toFixed(2)}`)
+
+    // Update the confidence score and abstract if fetched
+    await prisma.document.update({
+      where: { id: doc.id },
+      data: {
+        confidenceScore: newScore,
+        abstract: article.abstract || doc.abstract // Update abstract if we fetched it
+      }
+    })
+
+    updated++
+
+    // Small delay to avoid rate limiting
+    await new Promise(resolve => setTimeout(resolve, 300))
+  }
+
+  console.log(`Re-scored ${updated} auto-found references`)
+
+  revalidatePath(`/projects/${projectId}`)
+
+  return {
+    projectId,
+    message: `Successfully re-scored ${updated} auto-found references`,
+    updated,
+    productContext
+  }
+}
+
+/**
  * Run regulatory compliance check on all claims in a project
  */
 export async function runComplianceCheck(projectId: string) {
