@@ -4,9 +4,13 @@ import { signInSchema } from "./lib/zod"
 import { prisma } from "./utils/db"
  
 export const { handlers, auth } = NextAuth({
+  pages: {
+    signIn: "/auth",
+  },
   session: {
     strategy: "jwt",
   },
+  trustHost: true, // Required for Next-Auth v5 in production
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -31,14 +35,24 @@ export const { handlers, auth } = NextAuth({
       },
       authorize: async (credentials) => {
         try {
+          console.log("[AUTH] Authorize called with credentials:", { email: credentials?.email })
+          
           const { email, password } = await signInSchema.parseAsync(credentials)
+          console.log("[AUTH] Credentials validated, looking up user:", email)
 
           // Find user by email
           const user = await prisma.user.findUnique({
             where: { email },
           })
 
+          console.log("[AUTH] User lookup result:", { 
+            found: !!user, 
+            hasPassword: !!user?.password,
+            userId: user?.id 
+          })
+
           if (!user || !user.password) {
+            console.log("[AUTH] User not found or no password")
             return null
           }
 
@@ -46,9 +60,14 @@ export const { handlers, auth } = NextAuth({
           const { verifyPassword } = await import("./utils/password")
           const isValid = verifyPassword(password, user.password)
 
+          console.log("[AUTH] Password verification:", { isValid })
+
           if (!isValid) {
+            console.log("[AUTH] Invalid password")
             return null
           }
+
+          console.log("[AUTH] Login successful for user:", user.email)
 
           // Return user object for NextAuth
           return {
@@ -56,7 +75,8 @@ export const { handlers, auth } = NextAuth({
             email: user.email,
             name: user.name,
           }
-        } catch {
+        } catch (error) {
+          console.error("[AUTH] Authorization error:", error)
           return null
         }
       },

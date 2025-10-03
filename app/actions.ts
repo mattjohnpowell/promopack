@@ -42,8 +42,8 @@ export async function signUp(formData: FormData) {
       },
     })
 
-    // Redirect to home page for sign in
-    redirect("/")
+    // Redirect to auth page for sign in
+    redirect("/auth")
   } catch (error) {
     if (error instanceof Error) {
       throw error

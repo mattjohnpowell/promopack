@@ -39,10 +39,10 @@ export default function Header() {
               </button>
             ) : (
               <>
-                <Link href="/account" className="text-pharma-slate hover:text-pharma-blue transition-colors text-sm">
+                <Link href="/auth" className="text-pharma-slate hover:text-pharma-blue transition-colors text-sm">
                   Sign In
                 </Link>
-                <Link href="/account" className="btn-primary text-sm">
+                <Link href="/auth" className="btn-primary text-sm">
                   Sign Up
                 </Link>
               </>

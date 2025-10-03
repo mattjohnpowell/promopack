@@ -1,20 +1,26 @@
 "use client"
 import { signUp } from "../app/actions"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 export function SignUp() {
   const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
+    setIsLoading(true)
 
     const formData = new FormData(e.currentTarget)
 
     try {
       await signUp(formData)
+      // If we get here, signup was successful and we'll be redirected
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create account")
+      setIsLoading(false)
     }
   }
 
@@ -69,9 +75,10 @@ export function SignUp() {
 
       <button
         type="submit"
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+        disabled={isLoading}
+        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Create Account
+        {isLoading ? "Creating Account..." : "Create Account"}
       </button>
     </form>
   )
