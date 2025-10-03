@@ -15,8 +15,8 @@ export default function Header() {
             <Image
               src="/promopack-logo.svg"
               alt="PromoPack Logo"
-              width={40}
-              height={40}
+              width={120}
+              height={120}
             />
           </Link>
           <nav className="hidden md:flex space-x-8">
