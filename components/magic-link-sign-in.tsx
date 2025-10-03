@@ -68,7 +68,7 @@ export function MagicLinkSignIn() {
       </button>
 
       <div className="text-xs text-gray-500 text-center">
-        We'll send you a link to sign in without a password
+        We&apos;ll send you a link to sign in without a password
       </div>
     </form>
   )

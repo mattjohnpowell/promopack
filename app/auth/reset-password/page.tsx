@@ -43,7 +43,7 @@ export default function ResetPasswordPage() {
               Check your email
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
-              We've sent a magic link to <strong>{email}</strong>
+              We&apos;ve sent a magic link to <strong>{email}</strong>
             </p>
             <p className="mt-4 text-center text-sm text-gray-600">
               Click the link in the email to sign in to your account. The link will expire in 24 hours.
@@ -67,7 +67,7 @@ export default function ResetPasswordPage() {
             Reset your password
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your email address and we'll send you a magic link to sign in.
+            Enter your email address and we&apos;ll send you a magic link to sign in.
           </p>
         </div>
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
