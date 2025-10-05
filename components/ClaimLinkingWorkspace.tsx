@@ -299,7 +299,11 @@ export function ClaimLinkingWorkspace({
 
           {sourceDocument && sourceDocument.url ? (
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <PDFViewer url={sourceDocument.url} className="max-h-80 overflow-auto rounded border border-gray-200" />
+              <PDFViewer
+                url={`/api/pdf/${sourceDocument.id}`}
+                highlightPage={selectedClaim?.page || null}
+                className="max-h-80 overflow-auto rounded border border-gray-200"
+              />
             </div>
           ) : (
             <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">

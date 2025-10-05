@@ -568,6 +568,13 @@ export async function generatePack(projectId: string) {
     throw new Error("User not found")
   }
 
+  // Check subscription access (pack generation requires active subscription)
+  const { hasActiveSubscription } = await import('@/utils/subscription')
+  const hasSubscription = await hasActiveSubscription(user.id)
+  if (!hasSubscription) {
+    throw new Error("Active subscription required to generate reference packs. Please upgrade your plan.")
+  }
+
   // Get project with all data
   const project = await prisma.project.findFirst({
     where: {
@@ -682,291 +689,6 @@ export async function generatePack(projectId: string) {
     throw new Error("Failed to generate reference pack")
   }
 }
-
-// Billing / Stripe server action skeletons
-export async function createCheckoutSession(projectId: string, priceId: string) {
-  const session = await auth()
-  if (!session?.user?.email) throw new Error('Unauthorized')
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } })
-  if (!user) throw new Error('User not found')
-
-  // Ownership / access check: ensure user has access to project
-  const project = await prisma.project.findFirst({ where: { id: projectId, userId: user.id } })
-  if (!project) throw new Error('Project not found or access denied')
-
-  // NOTE: Implement Stripe Checkout creation here (server-side) using STRIPE_SECRET_KEY
-  // Example (pseudo):
-  // const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2022-11-15' })
-  // const session = await stripe.checkout.sessions.create({...})
-
-  // Return a placeholder until Stripe is wired
-  return { url: `/billing/checkout?priceId=${priceId}` }
-}
-
-export async function createSubscriptionCheckout(priceId: string) {
-  const session = await auth()
-  if (!session?.user?.email) throw new Error('Unauthorized')
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } })
-  if (!user) throw new Error('User not found')
-
-  const stripeSecretKey = process.env.STRIPE_SECRET_KEY
-  if (!stripeSecretKey) throw new Error('Stripe not configured')
-
-  const stripe = new Stripe(stripeSecretKey, { apiVersion: '2025-08-27.basil' })
-
-  // Create or get user account
-  let account = await prisma.account.findFirst({
-    where: { users: { some: { id: user.id } } }
-  })
-
-  if (!account) {
-    account = await prisma.account.create({
-      data: {
-        name: user.name || user.email || 'Personal Account',
-        billingEmail: user.email,
-        users: { connect: { id: user.id } }
-      }
-    })
-  }
-
-  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3032'
-
-  // Create Stripe checkout session for subscription
-  const checkoutSession = await stripe.checkout.sessions.create({
-    line_items: [{
-      price: priceId,
-      quantity: 1,
-    }],
-    mode: 'subscription',
-    success_url: baseUrl + '/account?success=true&session_id={CHECKOUT_SESSION_ID}',
-    cancel_url: baseUrl + '/pricing?canceled=true',
-    metadata: {
-      userId: user.id,
-      accountId: account.id,
-    },
-    customer_email: user.email || undefined,
-    allow_promotion_codes: true,
-    billing_address_collection: 'required',
-  } as Stripe.Checkout.SessionCreateParams)
-
-  return { url: checkoutSession.url }
-}
-
-// Webhook handler for Stripe events
-export async function handleStripeWebhook(signature: string, payload: Buffer) {
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
-  if (!webhookSecret) throw new Error('Webhook secret not configured')
-
-  const stripeSecretKey = process.env.STRIPE_SECRET_KEY
-  if (!stripeSecretKey) throw new Error('Stripe not configured')
-
-  const stripe = new Stripe(stripeSecretKey, { apiVersion: '2025-08-27.basil' })
-
-  let event: Stripe.Event
-
-  try {
-    event = stripe.webhooks.constructEvent(payload, signature, webhookSecret)
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err)
-    throw new Error('Invalid webhook signature')
-  }
-
-  console.log('Processing webhook event:', event.type)
-
-  try {
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session
-        await handleCheckoutSessionCompleted(session)
-        break
-      }
-      case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as Stripe.Invoice
-        await handleInvoicePaymentSucceeded(invoice)
-        break
-      }
-      case 'invoice.finalized': {
-        const invoice = event.data.object as Stripe.Invoice
-        await handleInvoiceFinalized(invoice)
-        break
-      }
-      case 'customer.subscription.created':
-      case 'customer.subscription.updated': {
-        const subscription = event.data.object as Stripe.Subscription
-        await handleSubscriptionUpdated(subscription)
-        break
-      }
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription
-        await handleSubscriptionDeleted(subscription)
-        break
-      }
-      // case 'product.created':
-      // case 'product.updated': {
-      //   const product = event.data.object as Stripe.Product
-      //   await handleProductUpdated(product)
-      //   break
-      // }
-      // case 'price.created':
-      // case 'price.updated': {
-      //   const price = event.data.object as Stripe.Price
-      //   await handlePriceUpdated(price)
-      //   break
-      // }
-      default:
-        console.log('Unhandled event type:', event.type)
-    }
-
-    return { handled: true }
-  } catch (error) {
-    console.error('Error processing webhook:', error)
-    throw error
-  }
-}
-
-// Helper functions for webhook event handling
-async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
-  const userId = session.metadata?.userId
-  const accountId = session.metadata?.accountId
-
-  if (!userId) {
-    console.error('No userId in checkout session metadata')
-    return
-  }
-
-  // Get subscription details from Stripe
-  if (session.subscription) {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-08-27.basil' })
-    const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
-
-    const price = subscription.items.data[0]?.price
-    if (!price) return
-
-    // Create or update subscription record
-    const subscriptionData = {
-      accountId: accountId || userId, // Use accountId if available, otherwise userId as account
-      stripeId: subscription.id,
-      status: subscription.status,
-      priceId: price.id,
-      interval: price.recurring?.interval || 'month',
-      seatCount: 1
-    }
-
-    await prisma.subscription.upsert({
-      where: { stripeId: subscription.id },
-      update: subscriptionData,
-      create: subscriptionData
-    })
-
-    console.log('Subscription created/updated:', subscription.id)
-  }
-}
-
-async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
-  // Update local invoice status
-  await prisma.invoice.updateMany({
-    where: { stripeId: invoice.id },
-    data: { status: 'PAID' }
-  })
-
-  // Create payment record
-  await prisma.payment.create({
-    data: {
-      invoiceId: (await prisma.invoice.findFirst({ where: { stripeId: invoice.id } }))?.id,
-      stripeId: `invoice_${invoice.id}`,
-      amount: invoice.amount_paid,
-      status: 'SUCCEEDED',
-      paidAt: new Date()
-    }
-  })
-
-  console.log('Invoice payment recorded:', invoice.id)
-}
-
-async function handleInvoiceFinalized(invoice: Stripe.Invoice) {
-  // Update local invoice with final details
-  await prisma.invoice.updateMany({
-    where: { stripeId: invoice.id },
-    data: {
-      number: invoice.number || undefined,
-      pdfUrl: invoice.invoice_pdf || undefined,
-      status: 'OPEN'
-    }
-  })
-
-  console.log('Invoice finalized:', invoice.id)
-}
-
-async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  await prisma.subscription.updateMany({
-    where: { stripeId: subscription.id },
-    data: {
-      status: subscription.status,
-      seatCount: subscription.items.data[0]?.quantity || 1
-    }
-  })
-
-  console.log('Subscription updated:', subscription.id)
-}
-
-async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  await prisma.subscription.updateMany({
-    where: { stripeId: subscription.id },
-    data: {
-      status: 'canceled',
-      canceledAt: new Date()
-    }
-  })
-
-  console.log('Subscription canceled:', subscription.id)
-}
-
-// async function handleProductUpdated(product: Stripe.Product) {
-//   // Sync product data from Stripe to our database
-//   await prisma.product.upsert({
-//     where: { stripeId: product.id },
-//     update: {
-//       name: product.name,
-//       description: product.description,
-//       active: product.active
-//     },
-//     create: {
-//       stripeId: product.id,
-//       name: product.name || '',
-//       description: product.description,
-//       active: product.active
-//     }
-//   })
-
-//   console.log('Product synced:', product.id)
-// }
-
-// async function handlePriceUpdated(price: Stripe.Price) {
-//   // Sync price data from Stripe to our database
-//   await prisma.price.upsert({
-//     where: { stripeId: price.id },
-//     update: {
-//       amount: price.unit_amount || 0,
-//       currency: price.currency,
-//       interval: price.recurring?.interval,
-//       intervalCount: price.recurring?.interval_count || 1,
-//       type: price.type,
-//       active: price.active
-//     },
-//     create: {
-//       stripeId: price.id,
-//       productId: price.product as string,
-//       amount: price.unit_amount || 0,
-//       currency: price.currency,
-//       interval: price.recurring?.interval,
-//       intervalCount: price.recurring?.interval_count || 1,
-//       type: price.type,
-//       active: price.active
-//     }
-//   })
-
-//   console.log('Price synced:', price.id)
-// }
 
 export async function autoLinkClaims(projectId: string) {
   const session = await auth()
@@ -1289,11 +1011,15 @@ export async function searchPubMedForClaim(claimId: string, projectId: string) {
       }))
     )
 
-    // Sort by relevance and take top 5
-    scoredArticles.sort((a, b) => b.relevanceScore - a.relevanceScore)
-    const topArticles = scoredArticles.slice(0, 5)
+    // Filter by minimum relevance threshold (50% minimum to avoid bad suggestions)
+    const MINIMUM_RELEVANCE_THRESHOLD = 0.5
+    const relevantArticles = scoredArticles.filter(a => a.relevanceScore >= MINIMUM_RELEVANCE_THRESHOLD)
 
-    console.log(`Found ${topArticles.length} PubMed articles, relevance scores:`,
+    // Sort by relevance and take top 5
+    relevantArticles.sort((a, b) => b.relevanceScore - a.relevanceScore)
+    const topArticles = relevantArticles.slice(0, 5)
+
+    console.log(`Found ${topArticles.length} relevant PubMed articles (${scoredArticles.length - relevantArticles.length} filtered out for low relevance), scores:`,
       topArticles.map(a => `${a.pubmedId}: ${a.relevanceScore.toFixed(2)}`))
 
     // Create suggested documents (not yet accepted)
@@ -1731,5 +1457,166 @@ export async function runComplianceCheck(projectId: string) {
     projectId,
     results: complianceResults,
     summary
+  }
+}
+
+/**
+ * Create a Stripe checkout session for a subscription.
+ * Returns the checkout URL to redirect the user to.
+ */
+export async function createCheckoutSession(priceId: string, successUrl?: string, cancelUrl?: string) {
+  const session = await auth()
+  
+  if (!session?.user?.email) {
+    throw new Error('Unauthorized')
+  }
+
+  // Find or create user and their account
+  let user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: { account: true },
+  })
+
+  if (!user) {
+    throw new Error('User not found')
+  }
+
+  // Create account if user doesn't have one
+  if (!user.account) {
+    const account = await prisma.account.create({
+      data: {
+        name: user.name || user.email,
+        billingEmail: user.email,
+      },
+    })
+
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: { accountId: account.id },
+      include: { account: true },
+    })
+  }
+
+  // Import Stripe utilities
+  const { stripe, getOrCreateStripeCustomer } = await import('@/utils/stripe')
+
+  // Get or create Stripe customer
+  const customerId = await getOrCreateStripeCustomer({
+    accountId: user.account!.id,
+    email: user.email!,
+    name: user.name || undefined,
+  })
+
+  // Create checkout session
+  const checkoutSession = await stripe.checkout.sessions.create({
+    customer: customerId,
+    mode: 'subscription',
+    payment_method_types: ['card'],
+    line_items: [
+      {
+        price: priceId,
+        quantity: 1,
+      },
+    ],
+    success_url: successUrl || `${process.env.NEXTAUTH_URL}/account/billing?success=true`,
+    cancel_url: cancelUrl || `${process.env.NEXTAUTH_URL}/pricing?canceled=true`,
+    metadata: {
+      accountId: user.account!.id,
+      userId: user.id,
+    },
+    subscription_data: {
+      metadata: {
+        accountId: user.account!.id,
+      },
+    },
+  })
+
+  if (!checkoutSession.url) {
+    throw new Error('Failed to create checkout session')
+  }
+
+  return { url: checkoutSession.url }
+}
+
+/**
+ * Create a billing portal session for managing subscriptions.
+ * Returns the portal URL to redirect the user to.
+ */
+export async function createBillingPortalSession(returnUrl?: string) {
+  const session = await auth()
+  
+  if (!session?.user?.email) {
+    throw new Error('Unauthorized')
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: { account: true },
+  })
+
+  if (!user?.account?.companyId) {
+    throw new Error('No billing account found')
+  }
+
+  const { stripe } = await import('@/utils/stripe')
+
+  // Create billing portal session
+  const portalSession = await stripe.billingPortal.sessions.create({
+    customer: user.account.companyId,
+    return_url: returnUrl || `${process.env.NEXTAUTH_URL}/account/billing`,
+  })
+
+  return { url: portalSession.url }
+}
+
+/**
+ * Get the current user's subscription status and details.
+ */
+export async function getSubscriptionStatus() {
+  const session = await auth()
+  
+  if (!session?.user?.email) {
+    throw new Error('Unauthorized')
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: {
+      account: {
+        include: {
+          subscriptions: {
+            where: {
+              status: { in: ['active', 'trialing', 'past_due'] },
+            },
+            orderBy: {
+              startedAt: 'desc',
+            },
+            take: 1,
+          },
+        },
+      },
+    },
+  })
+
+  if (!user?.account) {
+    return {
+      hasActiveSubscription: false,
+      subscription: null,
+    }
+  }
+
+  const subscription = user.account.subscriptions[0] || null
+
+  return {
+    hasActiveSubscription: !!subscription,
+    subscription: subscription ? {
+      id: subscription.id,
+      status: subscription.status,
+      priceId: subscription.priceId,
+      interval: subscription.interval,
+      seatCount: subscription.seatCount,
+      startedAt: subscription.startedAt,
+      canceledAt: subscription.canceledAt,
+    } : null,
   }
 }

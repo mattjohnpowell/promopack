@@ -88,12 +88,21 @@ We need a payments system that supports both enterprise (pharma companies) and i
 	- Provide invoice PDFs and clear tax fields. Support different billing addresses per project if needed.
 	- Add role-based access so only billing admins can view/change billing details.
 
-Next implementation tasks (TODOs):
-- [ ] Design billing data model (accounts, subscriptions, seats, invoices, payments) in Prisma schema and migration.
-- [ ] Integrate Stripe (or chosen provider) for enterprise & consumer flows; add webhooks for invoice/payment events.
-- [ ] Build Billing UI (billing settings, payment method editor, invoices list, billing contacts).
-- [ ] Implement server actions for creating subscriptions, submitting invoices, applying credits, and reconciling payments.
-- [ ] Add exportable invoice reports for finance (CSV, PDF) and a way to mark manual payments.
+Implementation tasks (completed):
+- [x] Design billing data model (accounts, subscriptions, seats, invoices, payments) in Prisma schema and migration.
+- [x] Integrate Stripe for enterprise & consumer flows; add webhooks for invoice/payment events.
+- [x] Build Billing UI (billing settings, payment method editor, invoices list, billing contacts).
+- [x] Implement server actions for creating subscriptions, submitting invoices, applying credits, and reconciling payments.
+- [x] Add subscription checks to protect premium features (generatePack, createProject with limits).
+- [x] Create sync script for Stripe products/prices to database.
+- [x] Create comprehensive setup documentation (docs/STRIPE_SETUP.md).
+
+Next steps for payments:
+- [ ] Add exportable invoice reports for finance (CSV, PDF).
+- [ ] Implement manual payment reconciliation for enterprise invoices.
+- [ ] Add email notifications for payment events (success, failure, upcoming renewals).
+- [ ] Create admin interface for managing enterprise accounts and manual invoices.
+- [ ] Add support for enterprise SSO integration.
 
 
 ## Compliance and Security

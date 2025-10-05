@@ -1,21 +1,29 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Document, Page, pdfjs } from "react-pdf"
 
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
+// Configure PDF.js worker - use version bundled with react-pdf
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
 interface PDFViewerProps {
   url: string
   className?: string
+  highlightPage?: number | null // Page to highlight/jump to
 }
 
-export function PDFViewer({ url, className = "" }: PDFViewerProps) {
+export function PDFViewer({ url, className = "", highlightPage }: PDFViewerProps) {
   const [numPages, setNumPages] = useState<number | null>(null)
   const [pageNumber, setPageNumber] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Jump to highlighted page when it changes
+  useEffect(() => {
+    if (highlightPage && highlightPage >= 1 && (!numPages || highlightPage <= numPages)) {
+      setPageNumber(highlightPage)
+    }
+  }, [highlightPage, numPages])
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages)
@@ -24,9 +32,20 @@ export function PDFViewer({ url, className = "" }: PDFViewerProps) {
   }
 
   function onDocumentLoadError(error: Error) {
-    setError("Failed to load PDF")
-    setLoading(false)
     console.error("PDF load error:", error)
+
+    // Provide more specific error messages
+    let errorMessage = "Failed to load PDF"
+    if (error.message.includes("CORS")) {
+      errorMessage = "PDF blocked by CORS policy"
+    } else if (error.message.includes("404")) {
+      errorMessage = "PDF not found or URL expired"
+    } else if (error.message.includes("403")) {
+      errorMessage = "Access denied to PDF"
+    }
+
+    setError(errorMessage)
+    setLoading(false)
   }
 
   if (error) {
@@ -63,12 +82,19 @@ export function PDFViewer({ url, className = "" }: PDFViewerProps) {
         loading=""
         className="flex flex-col items-center"
       >
-        <Page
-          pageNumber={pageNumber}
-          renderTextLayer={false}
-          renderAnnotationLayer={false}
-          className="shadow-lg"
-        />
+        <div className={`relative ${pageNumber === highlightPage ? 'ring-4 ring-pharma-blue ring-offset-4 rounded-lg animate-pulse-slow' : ''}`}>
+          <Page
+            pageNumber={pageNumber}
+            renderTextLayer={false}
+            renderAnnotationLayer={false}
+            className="shadow-lg"
+          />
+          {pageNumber === highlightPage && (
+            <div className="absolute top-2 right-2 bg-pharma-blue text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
+              Claim on this page
+            </div>
+          )}
+        </div>
       </Document>
 
       {numPages && numPages > 1 && (

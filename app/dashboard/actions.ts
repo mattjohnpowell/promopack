@@ -19,6 +19,14 @@ export async function createProject(formData: FormData) {
     throw new Error("User ID not found")
   }
 
+  // Check usage limits before creating project
+  const { checkUsageLimit } = await import('@/utils/subscription')
+  const usageCheck = await checkUsageLimit(user.id, 'projects')
+  
+  if (!usageCheck.allowed) {
+    throw new Error(usageCheck.message || 'Project limit reached. Please upgrade your plan.')
+  }
+
   const name = formData.get("name") as string
   if (!name) {
     throw new Error("Project name is required")

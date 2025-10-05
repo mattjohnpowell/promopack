@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { createSubscriptionCheckout } from "@/app/actions"
+import { createCheckoutSession } from "@/app/actions"
 
 interface PricingTier {
   id: string
@@ -63,7 +63,7 @@ export function PricingComponent() {
   const handleSubscribe = async (tier: PricingTier) => {
     setIsLoading(tier.id)
     try {
-      const result = await createSubscriptionCheckout(tier.stripePriceId)
+      const result = await createCheckoutSession(tier.stripePriceId)
       if (result.url) {
         // Redirect to Stripe checkout
         window.location.href = result.url

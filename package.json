@@ -26,6 +26,7 @@
     "react-hot-toast": "^2.6.0",
     "react-pdf": "^9.2.1",
     "resend": "^6.1.2",
+    "schema-dts": "^1.1.5",
     "stripe": "^18.5.0",
     "zod": "^4.1.11"
   },

@@ -16,10 +16,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "PromoPack - Pharmaceutical Promotional Content Management",
-  description: "Create and manage promotional content with automated claim extraction and reference linking",
-};
+import { defaultMetadata } from "@/lib/metadata";
+
+export const metadata: Metadata = defaultMetadata;
 
 export default function RootLayout({
   children,
