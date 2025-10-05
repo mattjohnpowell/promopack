@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promopack.io'
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promopack.app'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const currentDate = new Date()
@@ -19,21 +19,39 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
-      url: `${siteUrl}/dashboard`,
+      url: `${siteUrl}/use-cases/medical-affairs`,
       lastModified: currentDate,
-      changeFrequency: 'daily',
-      priority: 0.8,
+      changeFrequency: 'monthly',
+      priority: 0.9,
+    },
+    {
+      url: `${siteUrl}/use-cases/fda-compliance`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly',
+      priority: 0.9,
     },
     {
       url: `${siteUrl}/blog`,
       lastModified: currentDate,
       changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/blog/fda-compliance-promotional-materials`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly',
       priority: 0.7,
     },
     {
-      url: `${siteUrl}/contact`,
+      url: `${siteUrl}/blog/mlr-workflow-optimization`,
       lastModified: currentDate,
       changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${siteUrl}/dashboard`,
+      lastModified: currentDate,
+      changeFrequency: 'daily',
       priority: 0.6,
     },
   ]

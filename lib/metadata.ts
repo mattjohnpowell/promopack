@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promopack.io'
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promopack.app'
 const siteName = 'PromoPack'
 const siteDescription = 'Transform pharmaceutical promotional content creation with AI-powered claim extraction, automated reference linking, and built-in FDA compliance. Trusted by medical affairs teams to reduce review cycles by 75%.'
 

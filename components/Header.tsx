@@ -20,6 +20,27 @@ export default function Header() {
             />
           </Link>
           <nav className="hidden md:flex space-x-8">
+            <div className="relative group">
+              <button className="text-pharma-slate hover:text-pharma-blue transition-colors flex items-center">
+                Solutions
+                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                <Link href="/use-cases/medical-affairs" className="block px-4 py-3 hover:bg-pharma-blue/5 rounded-t-lg">
+                  <div className="font-semibold text-pharma-slate">Medical Affairs</div>
+                  <div className="text-sm text-pharma-gray">MLR workflow automation</div>
+                </Link>
+                <Link href="/use-cases/fda-compliance" className="block px-4 py-3 hover:bg-pharma-blue/5 rounded-b-lg">
+                  <div className="font-semibold text-pharma-slate">FDA Compliance</div>
+                  <div className="text-sm text-pharma-gray">Automated compliance checking</div>
+                </Link>
+              </div>
+            </div>
+            <Link href="/blog" className="text-pharma-slate hover:text-pharma-blue transition-colors">
+              Blog
+            </Link>
             <Link href="/pricing" className="text-pharma-slate hover:text-pharma-blue transition-colors">
               Pricing
             </Link>

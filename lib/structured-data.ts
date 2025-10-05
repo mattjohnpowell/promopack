@@ -1,6 +1,6 @@
 import { WithContext, Organization, SoftwareApplication, FAQPage } from 'schema-dts'
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promopack.io'
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promopack.app'
 
 export const organizationSchema: WithContext<Organization> = {
   '@context': 'https://schema.org',
