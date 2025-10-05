@@ -179,6 +179,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   }
 
   // Fetch expanded invoice to get charge info
+  if (!invoice.id) return;
   const expandedInvoice = await stripe.invoices.retrieve(invoice.id, {
     expand: ['charge'],
   });
@@ -203,7 +204,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   });
 
   // Record payment if there's a charge
-  const charge = expandedInvoice.charge;
+  const charge = (expandedInvoice as any).charge;
   const chargeId = typeof charge === 'string' ? charge : charge?.id;
   if (chargeId) {
     await prisma.payment.upsert({

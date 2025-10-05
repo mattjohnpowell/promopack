@@ -59,7 +59,7 @@ export function BillingPageClient({
         </svg>
         <h3 className="mt-2 text-lg font-medium text-gray-900">No active subscription</h3>
         <p className="mt-1 text-sm text-gray-500">
-          You don't have an active subscription. Choose a plan to get started.
+          You don&apos;t have an active subscription. Choose a plan to get started.
         </p>
         <div className="mt-6">
           <a

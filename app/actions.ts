@@ -1485,8 +1485,8 @@ export async function createCheckoutSession(priceId: string, successUrl?: string
   if (!user.account) {
     const account = await prisma.account.create({
       data: {
-        name: user.name || user.email,
-        billingEmail: user.email,
+        name: user.name || user.email || 'Account',
+        billingEmail: user.email || '',
       },
     })
 

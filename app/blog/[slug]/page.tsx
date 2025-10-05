@@ -178,7 +178,7 @@ export default async function BlogPostPage({
                 Ready to Streamline Your MLR Workflow?
               </h3>
               <p className="text-pharma-gray mb-6">
-                Try PromoPack's FDA-compliant pharmaceutical promotional content platform.
+                Try PromoPack&apos;s FDA-compliant pharmaceutical promotional content platform.
                 Reduce review cycles by 75% with automated claim extraction and compliance checking.
               </p>
               <Link href="/dashboard?demo=true" className="btn-primary inline-block">

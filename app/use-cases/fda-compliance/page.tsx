@@ -112,7 +112,7 @@ export default function FDACompliancePage() {
                 <div className="bg-pharma-green/5 p-6 rounded-lg">
                   <h4 className="font-semibold text-pharma-slate mb-3">Indication Accuracy</h4>
                   <p className="text-sm text-pharma-gray">
-                    Ensures promotional content stays within approved indications and doesn't imply off-label use.
+                    Ensures promotional content stays within approved indications and doesn&apos;t imply off-label use.
                   </p>
                 </div>
               </div>
@@ -212,7 +212,7 @@ export default function FDACompliancePage() {
             Eliminate Compliance Risk Today
           </h2>
           <p className="text-xl text-white/90 mb-8">
-            Try PromoPack's automated FDA compliance checking on your promotional materials
+            Try PromoPack&apos;s automated FDA compliance checking on your promotional materials
           </p>
           <Link href="/dashboard?demo=true" className="bg-white text-pharma-blue px-8 py-4 rounded-lg font-semibold hover:bg-pharma-gray-light transition-colors inline-block">
             Test Your Materials - Free Demo
