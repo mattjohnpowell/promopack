@@ -33,12 +33,7 @@ export function ExtractClaimsButton({ projectId, hasSourceDocument }: ExtractCla
       setProgress(100)
       clearInterval(progressInterval)
 
-      let message = result.message
-      if (result.autoFindResult) {
-        message += ` | Found ${result.autoFindResult.totalSuggested} suggested references`
-      }
-
-      toast.success(message, { duration: 5000 })
+      toast.success(result.message, { duration: 5000 })
 
       // Navigate to claims page
       router.push(`/projects/${projectId}/claims`)
