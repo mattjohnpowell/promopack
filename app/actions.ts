@@ -559,7 +559,7 @@ export async function reviewClaim(
   }
 
   try {
-    let updateData: any = {
+    const updateData: any = {
       reviewedAt: new Date(),
       reviewedBy: user.id,
     }
@@ -627,7 +627,7 @@ export async function bulkReviewClaims(
   }
 
   try {
-    let updateData: any = {
+    const updateData: any = {
       reviewedAt: new Date(),
       reviewedBy: user.id,
     }

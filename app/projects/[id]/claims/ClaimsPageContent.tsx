@@ -219,7 +219,7 @@ export function ClaimsPageContent({ projectId, claims, projectName, isDemo = fal
                 <div>
                   <h3 className="text-lg font-semibold mb-1">Demo Mode - Explore PromoPack</h3>
                   <p className="text-purple-100 text-sm mb-3">
-                    You're viewing a sample pharmaceutical campaign project. This demonstrates claim extraction,
+                    You&apos;re viewing a sample pharmaceutical campaign project. This demonstrates claim extraction,
                     reference linking, and compliance validation features.
                   </p>
                   <div className="flex flex-wrap gap-3">

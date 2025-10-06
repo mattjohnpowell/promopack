@@ -495,12 +495,12 @@ export function ProjectContent({ project, isDemo }: ProjectContentProps) {
                         {project.claims.length > 0 ? (
                           <p className="text-sm text-gray-700 mb-4">
                             {project.claims.length} claim{project.claims.length !== 1 ? 's' : ''} extracted from your source document.
-                            You can re-extract if you've updated the document.
+                            You can re-extract if you&apos;ve updated the document.
                           </p>
                         ) : (
                           <p className="text-sm text-gray-700 mb-4">
                             Use AI to automatically identify and extract claims from your source document.
-                            Enable "Auto-find PubMed references" to automatically search for relevant clinical studies.
+                            Enable &quot;Auto-find PubMed references&quot; to automatically search for relevant clinical studies.
                           </p>
                         )}
                       </div>
