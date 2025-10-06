@@ -27,14 +27,22 @@ export default function Header() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              <div className="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <div className="absolute left-0 mt-2 w-72 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                 <Link href="/use-cases/medical-affairs" className="block px-4 py-3 hover:bg-pharma-blue/5 rounded-t-lg">
                   <div className="font-semibold text-pharma-slate">Medical Affairs</div>
                   <div className="text-sm text-pharma-gray">MLR workflow automation</div>
                 </Link>
-                <Link href="/use-cases/fda-compliance" className="block px-4 py-3 hover:bg-pharma-blue/5 rounded-b-lg">
-                  <div className="font-semibold text-pharma-slate">FDA Compliance</div>
-                  <div className="text-sm text-pharma-gray">Automated compliance checking</div>
+                <Link href="/use-cases/fda-compliance" className="block px-4 py-3 hover:bg-pharma-blue/5">
+                  <div className="font-semibold text-pharma-slate">FDA Compliance (US)</div>
+                  <div className="text-sm text-pharma-gray">US OPDP regulations</div>
+                </Link>
+                <Link href="/use-cases/ema-compliance" className="block px-4 py-3 hover:bg-pharma-blue/5">
+                  <div className="font-semibold text-pharma-slate">EMA Compliance (EU)</div>
+                  <div className="text-sm text-pharma-gray">European Union markets</div>
+                </Link>
+                <Link href="/use-cases/mhra-compliance" className="block px-4 py-3 hover:bg-pharma-blue/5 rounded-b-lg">
+                  <div className="font-semibold text-pharma-slate">MHRA Compliance (UK)</div>
+                  <div className="text-sm text-pharma-gray">United Kingdom post-Brexit</div>
                 </Link>
               </div>
             </div>

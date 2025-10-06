@@ -115,9 +115,128 @@ Next steps for payments:
 
 ## Future Enhancements (Post-MVP)
 - [ ] AI-powered claim suggestion
-- [ ] Integration with PubMed or other medical databases
+- [x] Integration with PubMed or other medical databases (PubMed integrated)
 - [ ] Mobile app companion
 - [ ] API for third-party integrations
 - [ ] Advanced analytics and reporting
 - [ ] Multi-language support
 - [ ] Custom branding for enterprise clients
+
+## Global Reference Database Integration
+
+Current state: PubMed integration covers ~80% of global pharmaceutical literature (36M+ citations).
+
+### Multi-Database Strategy
+
+**Phase 1: Clinical Trial Registries (Quick Win - Free APIs)**
+- [ ] Integrate ClinicalTrials.gov API (US/Global trials)
+- [ ] Integrate EU Clinical Trials Register (EMA submissions)
+- [ ] Add ISRCTN Registry (UK trials)
+- [ ] Add UMIN-CTR (Japan trials)
+- [ ] Build unified search across trial registries
+- [ ] Display trial status and results in reference linking
+
+**Phase 2: Premium Databases (High-Value Upsell)**
+- [ ] EMBASE integration (Elsevier Scopus API)
+  - Commercial license negotiation
+  - 30% unique content vs PubMed
+  - Critical for EMA submissions
+  - Position as premium tier feature
+- [ ] Cochrane Library integration
+  - Systematic reviews and meta-analyses
+  - Gold standard for UK/MHRA submissions
+  - NICE guidelines compatibility
+- [ ] Web of Science API (Clarivate)
+  - Citation tracking and impact factors
+  - Multi-lingual journal coverage
+
+**Phase 3: Regional Databases (Market-Specific)**
+- [ ] J-STAGE integration (Japan)
+  - Japanese pharmaceutical research
+  - PMDA-specific references
+  - Japanese-language support
+- [ ] LIVIVO integration (Germany)
+  - German pharmaceutical literature
+  - EMBASE alternative for EU market
+- [ ] SciELO (Latin America/Europe)
+  - 1,500+ open access journals
+
+**Phase 4: Regulatory-Specific Databases**
+- [ ] EMA EPARs (European Public Assessment Reports)
+- [ ] MHRA Public Assessment Reports
+- [ ] Health Canada Drug Product Database
+- [ ] TGA Australian Public Assessment Reports
+- [ ] FDA Orange Book / Purple Book
+
+### Technical Implementation
+- [ ] Create multi-database adapter pattern (lib/reference-sources/)
+- [ ] Implement reference deduplication by DOI/PMID
+- [ ] Add database selection based on subscription tier
+- [ ] Build manual reference upload for non-indexed sources
+- [ ] Create database coverage dashboard for users
+- [ ] Add database-specific citation formatting
+
+### Pricing Strategy
+- **Basic Tier**: PubMed + Clinical Trial Registries
+- **Professional Tier**: + EMBASE + Cochrane
+- **Enterprise Tier**: + All regional databases + custom sources
+
+### Marketing Updates
+- [ ] Update homepage with multi-database messaging
+- [ ] Create database comparison page (PubMed vs EMBASE vs Cochrane)
+- [ ] Add "Reference Coverage" documentation
+- [ ] Create blog post: "Why PubMed Isn't Enough for Global Pharma Compliance"
+- [ ] Update pricing page with database tier comparisons
+
+## Global Regulatory Compliance Expansion
+
+Current state: FDA-focused messaging and compliance features.
+
+### Multi-Market Compliance Strategy
+
+**Phase 1: Content & SEO (Immediate - No Code Changes)**
+- [ ] Update homepage with multi-market compliance (FDA, EMA, MHRA, Health Canada, TGA)
+- [ ] Create EMA compliance landing page (/use-cases/ema-compliance)
+- [ ] Create MHRA/ABPI compliance landing page (/use-cases/mhra-compliance)
+- [ ] Create Health Canada/PAAB landing page (/use-cases/health-canada-paab)
+- [ ] Create multi-market compliance comparison page
+- [ ] Update blog content with international regulatory topics
+- [ ] Add international keywords to SEO strategy
+
+**Phase 2: Regulatory Rules Engine (Feature Development)**
+- [ ] Build configurable compliance rules engine
+- [ ] Add EMA Directive 2001/83/EC rules
+- [ ] Add MHRA Blue Guide & ABPI Code rules
+- [ ] Add Health Canada & PAAB guidelines
+- [ ] Add TGA Advertising Code rules
+- [ ] Add PMDA & JPMA Code rules (Japan)
+- [ ] Add WHO Ethical Criteria (international baseline)
+- [ ] Allow users to select target markets per project
+
+**Phase 3: Market-Specific Features**
+- [ ] Fair balance analysis (FDA/EMA/MHRA specific)
+- [ ] Market-specific claim substantiation requirements
+- [ ] Regional language support (UK English vs US English)
+- [ ] Market-specific templates and workflows
+- [ ] Jurisdiction-specific audit trail formatting
+
+**Phase 4: Localization**
+- [ ] Multi-currency support for pricing
+- [ ] Regional payment methods (SEPA, BACS, etc.)
+- [ ] Translated UI for major markets (DE, FR, ES, JP)
+- [ ] Time zone and date format localization
+- [ ] Regional customer support
+
+### Target Markets Priority
+1. **Europe (EMA)** - €250B market, 500M population
+2. **UK (MHRA)** - £30B market, separate from EU post-Brexit
+3. **Canada (Health Canada)** - $25B market, English-speaking
+4. **Australia (TGA)** - $26B market, English-speaking
+5. **Japan (PMDA)** - $80B market, requires Japanese content
+6. **Switzerland (Swissmedic)** - Small but pharma HQ hub (Novartis, Roche)
+
+### Competitive Advantage
+- Most compliance tools are US/FDA-only
+- Global pharma companies need multi-market support
+- Position as "only global pharma compliance platform"
+- Premium pricing for multi-market features

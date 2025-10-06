@@ -48,16 +48,16 @@ export default async function Home() {
             </div>
 
             <h1 className="text-4xl md:text-6xl font-bold text-pharma-slate mb-6">
-              FDA-Compliant Pharmaceutical Promotional Content
+              Global Pharmaceutical Promotional Content Platform
               <span className="block bg-gradient-to-r from-pharma-blue to-pharma-blue-dark bg-clip-text text-transparent">
-                75% Faster Review Cycles
+                Multi-Market Compliance | 75% Faster Reviews
               </span>
             </h1>
 
             <p className="text-xl text-pharma-gray max-w-3xl mx-auto mb-8">
-              AI-powered pharmaceutical promotional content platform with automated claim extraction,
-              intelligent reference linking, and built-in FDA compliance checking. Designed for medical affairs,
-              regulatory teams, and medical writers to accelerate MLR workflows while maintaining quality.
+              AI-powered platform for creating compliant pharmaceutical promotional materials across FDA, EMA, MHRA,
+              Health Canada, and TGA markets. Automated claim extraction, PubMed reference linking, and built-in
+              regulatory compliance checking for medical affairs and regulatory teams worldwide.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -69,24 +69,36 @@ export default async function Home() {
               </Link>
             </div>
 
-            <div className="flex items-center justify-center space-x-8 text-sm text-pharma-gray">
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-pharma-gray">
               <div className="flex items-center">
                 <svg className="w-5 h-5 text-pharma-green mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span>HIPAA Compliant</span>
+                <span>FDA (US)</span>
               </div>
               <div className="flex items-center">
                 <svg className="w-5 h-5 text-pharma-green mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span>FDA Ready</span>
+                <span>EMA (EU)</span>
               </div>
               <div className="flex items-center">
                 <svg className="w-5 h-5 text-pharma-green mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span>24/7 Support</span>
+                <span>MHRA (UK)</span>
+              </div>
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-pharma-green mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>Health Canada</span>
+              </div>
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-pharma-green mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>TGA (AU)</span>
               </div>
             </div>
           </div>
@@ -98,11 +110,11 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-pharma-slate mb-4">
-              Why Medical Affairs Teams Choose PromoPack
+              One Platform, Multi-Market Compliance
             </h2>
             <p className="text-xl text-pharma-gray max-w-2xl mx-auto">
-              Accelerate pharmaceutical promotional content creation while maintaining FDA compliance
-              and regulatory standards. Built specifically for MLR workflows and medical writing teams.
+              Create promotional materials that meet regulatory requirements across FDA, EMA, MHRA, Health Canada,
+              and TGA markets. Built for global pharmaceutical companies and medical affairs teams.
             </p>
           </div>
 
