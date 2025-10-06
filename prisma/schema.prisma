@@ -60,15 +60,38 @@ model Document {
 }
 
 model Claim {
-  id              String  @id @default(cuid())
+  id              String      @id @default(cuid())
   text            String
   page            Int
   projectId       String
+
+  // Classification fields
+  status          ClaimStatus @default(PENDING_REVIEW)
+  claimType       ClaimType?
+  rejectionReason String?
+  editedText      String?
+
+  // AI extraction metadata (from v4_regulatory API)
+  extractionConfidence Float?
+  extractionReasoning  String?
+  suggestedType        ClaimType?
+  isComparative        Boolean?
+  containsStatistics   Boolean?
+  citationPresent      Boolean?
+  warnings             String?  // JSON array of warning strings
+
+  // Link audit fields
   auditReasoning  String?
   confidenceScore Float?
-  needsReview     Boolean @default(false)
-  project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  links           Link[]
+  needsReview     Boolean     @default(false)
+
+  // Review tracking
+  reviewedAt DateTime?
+  reviewedBy String?
+  createdAt  DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  links   Link[]
 }
 
 model Link {
@@ -192,6 +215,26 @@ enum DocSource {
 enum DocType {
   SOURCE
   REFERENCE
+}
+
+enum ClaimStatus {
+  PENDING_REVIEW  // Freshly extracted, needs human review
+  APPROVED        // Confirmed as a real claim
+  REJECTED        // Not a claim (background info, fragment, etc)
+  EDITED          // User edited the extracted text
+}
+
+enum ClaimType {
+  EFFICACY          // "reduces stroke risk by 21%"
+  SAFETY            // "well-tolerated in elderly patients"
+  INDICATION        // "indicated for treatment of..."
+  COMPARATIVE       // "superior to warfarin for..."
+  PHARMACOKINETIC   // "peak plasma concentration occurs within..."
+  DOSING            // "recommended dose is 20mg once daily"
+  CONTRAINDICATION  // "contraindicated in patients with..."
+  MECHANISM         // "direct Factor Xa inhibitor"
+  DRUG_INTERACTION  // "may increase bleeding risk with aspirin"
+  OTHER             // Catch-all
 }
 
 model VerificationToken {

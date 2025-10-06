@@ -19,8 +19,8 @@ We prefer a feature-first testing approach: build a feature, manually verify it,
 - [x] Build claim extraction feature (extractClaims server action calling Python service)
 - [x] Develop claim & linking workspace UI (interactive component for linking claims to references)
 - [x] Implement PDF pack generation (generatePack server action using PDF-Lib)
-- [ ] Set up deployment on Coolify with environment variables
-- [ ] Configure Resend for production emails (verify domain, add API key)
+- [x] Set up deployment on Coolify with environment variables
+- [x] Configure Resend for production emails (verify domain, add API key)
 
 ## UI/UX Enhancements
 - [x] Design modern, professional UI with pharmaceutical industry aesthetic (clean, trustworthy, efficient)
@@ -35,12 +35,12 @@ We prefer a feature-first testing approach: build a feature, manually verify it,
 - [x] Create onboarding flow for new users
 
 ## Additional Features for Value Proposition
-- [ ] Build ROI calculator showing time and cost savings
-- [ ] Add demo mode with sample data for prospects
-- [ ] Implement project templates for common pharma materials
-- [ ] Create usage analytics dashboard for managers
-- [ ] Add export options (PDF, CSV reports)
-- [ ] Implement search and filtering for claims and documents
+- [x] Build ROI calculator showing time and cost savings
+- [x] Add demo mode with sample data for prospects
+- [x] Implement project templates for common pharma materials
+- [x] Create usage analytics dashboard for managers
+- [x] Add export options (PDF, CSV reports)
+- [x] Implement search and filtering for claims and documents
 - [ ] Add collaboration features (comments, sharing within team)
 - [ ] Create audit trail and compliance reporting
 - [ ] Add version control for projects and documents

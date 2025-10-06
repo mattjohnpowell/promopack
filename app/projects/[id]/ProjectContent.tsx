@@ -41,6 +41,12 @@ const FindReferencesButton = dynamic(
   { ssr: false, loading: () => <div className="flex justify-center p-4">Loading...</div> }
 )
 
+// Dynamically import DeleteDocumentButton
+const DeleteDocumentButton = dynamic(
+  () => import("@/components/DeleteDocumentButton").then(mod => ({ default: mod.DeleteDocumentButton })),
+  { ssr: false, loading: () => null }
+)
+
 type ProjectData = {
   id: string
   name: string
@@ -174,7 +180,7 @@ export function ProjectContent({ project, isDemo }: ProjectContentProps) {
   }, [project.documents, project.claims])
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<'documents' | 'claims' | 'linking' | 'compliance' | 'generate'>('documents')
+  const [activeTab, setActiveTab] = useState<'documents' | 'linking' | 'compliance' | 'generate'>('documents')
 
   // Determine which tabs are enabled
   const tabStates = useMemo(() => {
@@ -184,7 +190,6 @@ export function ProjectContent({ project, isDemo }: ProjectContentProps) {
 
     return {
       documents: true, // Always enabled
-      claims: hasSourceDocument, // Only need source document now (can auto-find refs)
       linking: hasClaims,
       compliance: hasClaims, // Requires claims to be extracted
       generate: allClaimsLinked
@@ -230,21 +235,9 @@ export function ProjectContent({ project, isDemo }: ProjectContentProps) {
                 Documents
               </button>
               <button
-                onClick={() => tabStates.claims && setActiveTab('claims')}
-                disabled={!tabStates.claims}
-                className={`flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm ${
-                  activeTab === 'claims'
-                    ? 'border-blue-500 text-blue-600'
-                    : tabStates.claims
-                    ? 'border-transparent text-gray-500 hover:text-gray-700'
-                    : 'border-transparent text-gray-300 cursor-not-allowed'
-                }`}
-              >
-                Extract Claims
-              </button>
-              <button
                 onClick={() => tabStates.linking && setActiveTab('linking')}
                 disabled={!tabStates.linking}
+                title={!tabStates.linking ? "Extract claims first" : ""}
                 className={`flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm ${
                   activeTab === 'linking'
                     ? 'border-blue-500 text-blue-600'
@@ -254,10 +247,16 @@ export function ProjectContent({ project, isDemo }: ProjectContentProps) {
                 }`}
               >
                 Link Claims
+                {!tabStates.linking && (
+                  <svg className="inline-block w-4 h-4 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                )}
               </button>
               <button
                 onClick={() => tabStates.compliance && setActiveTab('compliance')}
                 disabled={!tabStates.compliance}
+                title={!tabStates.compliance ? "Extract claims first" : ""}
                 className={`flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm ${
                   activeTab === 'compliance'
                     ? 'border-blue-500 text-blue-600'
@@ -267,10 +266,16 @@ export function ProjectContent({ project, isDemo }: ProjectContentProps) {
                 }`}
               >
                 Compliance
+                {!tabStates.compliance && (
+                  <svg className="inline-block w-4 h-4 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                )}
               </button>
               <button
                 onClick={() => tabStates.generate && setActiveTab('generate')}
                 disabled={!tabStates.generate}
+                title={!tabStates.generate ? "Link all claims to references first" : ""}
                 className={`flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm ${
                   activeTab === 'generate'
                     ? 'border-blue-500 text-blue-600'
@@ -280,6 +285,11 @@ export function ProjectContent({ project, isDemo }: ProjectContentProps) {
                 }`}
               >
                 Generate Pack
+                {!tabStates.generate && (
+                  <svg className="inline-block w-4 h-4 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                )}
               </button>
             </nav>
           </div>
@@ -288,9 +298,9 @@ export function ProjectContent({ project, isDemo }: ProjectContentProps) {
           <div className="p-6">
             {activeTab === 'documents' && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Documents</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Documents & Claims</h3>
                 <p className="text-gray-600 mb-6">
-                  Upload your promotional material as a SOURCE document and scientific reference documents (clinical trials, studies, guidelines) to substantiate claims. Both are required before claim extraction.
+                  Upload your promotional material as a SOURCE document, then extract claims. You can also add reference documents manually or let AI auto-find them from PubMed.
                 </p>
                 
                 {/* Display uploaded documents */}
@@ -321,16 +331,26 @@ export function ProjectContent({ project, isDemo }: ProjectContentProps) {
                                   </p>
                                 </div>
                               </div>
-                              {doc.url && (
-                                <a
-                                  href={doc.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                                >
-                                  View
-                                </a>
-                              )}
+                              <div className="flex items-center gap-2">
+                                {doc.url && (
+                                  <a
+                                    href={doc.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                  >
+                                    View
+                                  </a>
+                                )}
+                                {!isDemo && (
+                                  <DeleteDocumentButton
+                                    documentId={doc.id}
+                                    documentName={doc.name}
+                                    documentType="SOURCE"
+                                    isDemo={isDemo}
+                                  />
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -423,6 +443,14 @@ export function ProjectContent({ project, isDemo }: ProjectContentProps) {
                                     View
                                   </a>
                                 )}
+                                {!isDemo && (
+                                  <DeleteDocumentButton
+                                    documentId={doc.id}
+                                    documentName={doc.title || doc.name}
+                                    documentType="REFERENCE"
+                                    isDemo={isDemo}
+                                  />
+                                )}
                               </div>
                             </div>
                           ))}
@@ -456,6 +484,36 @@ export function ProjectContent({ project, isDemo }: ProjectContentProps) {
                   </div>
                 )}
 
+                {/* Extract Claims Section */}
+                {project.documents.some(doc => doc.type === 'SOURCE') && (
+                  <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border border-blue-200">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                          {project.claims.length > 0 ? 'Claims Extracted' : 'Ready to Extract Claims'}
+                        </h4>
+                        {project.claims.length > 0 ? (
+                          <p className="text-sm text-gray-700 mb-4">
+                            {project.claims.length} claim{project.claims.length !== 1 ? 's' : ''} extracted from your source document.
+                            You can re-extract if you've updated the document.
+                          </p>
+                        ) : (
+                          <p className="text-sm text-gray-700 mb-4">
+                            Use AI to automatically identify and extract claims from your source document.
+                            Enable "Auto-find PubMed references" to automatically search for relevant clinical studies.
+                          </p>
+                        )}
+                      </div>
+                      <div className="ml-4">
+                        <ExtractClaimsButton
+                          projectId={project.id}
+                          hasSourceDocument={project.documents.some(doc => doc.type === 'SOURCE')}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Suggested References Panel */}
                 {!isDemo && suggestedReferences.length > 0 && (
                   <SuggestedReferencesPanel
@@ -466,23 +524,6 @@ export function ProjectContent({ project, isDemo }: ProjectContentProps) {
                 )}
 
                 <FileUpload projectId={project.id} />
-              </div>
-            )}
-
-            {activeTab === 'claims' && tabStates.claims && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Extract Claims</h3>
-                <p className="text-gray-600 mb-6">
-                  Use AI to automatically identify and extract claims from your source document.
-                  Enable &ldquo;Auto-find PubMed references&rdquo; to automatically search for relevant clinical studies,
-                  or upload your own reference documents manually.
-                </p>
-                <div className="flex justify-center">
-                  <ExtractClaimsButton
-                    projectId={project.id}
-                    hasSourceDocument={project.documents.some(doc => doc.type === 'SOURCE')}
-                  />
-                </div>
               </div>
             )}
 
@@ -521,6 +562,83 @@ export function ProjectContent({ project, isDemo }: ProjectContentProps) {
                     hasLinks={project.claims.every(claim => claim.links.length > 0)}
                     claims={project.claims}
                   />
+                </div>
+              </div>
+            )}
+
+            {/* Show helpful message when tab is disabled */}
+            {activeTab === 'linking' && !tabStates.linking && (
+              <div className="text-center py-12">
+                <svg className="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Extract Claims First</h3>
+                <p className="text-gray-600 mb-4">
+                  Before linking, you need to extract claims from your source document.
+                </p>
+                <button
+                  onClick={() => setActiveTab('documents')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                >
+                  Go to Documents Tab
+                </button>
+              </div>
+            )}
+
+            {activeTab === 'compliance' && !tabStates.compliance && (
+              <div className="text-center py-12">
+                <svg className="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Extract Claims First</h3>
+                <p className="text-gray-600 mb-4">
+                  Compliance checking requires extracted claims to analyze.
+                </p>
+                <button
+                  onClick={() => setActiveTab('documents')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                >
+                  Go to Documents Tab
+                </button>
+              </div>
+            )}
+
+            {activeTab === 'generate' && !tabStates.generate && (
+              <div className="text-center py-12">
+                <svg className="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Link All Claims to References</h3>
+                <p className="text-gray-600 mb-4">
+                  {project.claims.length === 0 ? (
+                    <>You need to extract claims first before generating the pack.</>
+                  ) : (
+                    <>
+                      {project.claims.filter(c => c.links.length === 0).length} of {project.claims.length} claims still need to be linked to reference documents for compliance.
+                    </>
+                  )}
+                </p>
+                <div className="flex flex-col items-center gap-3">
+                  {project.claims.length === 0 ? (
+                    <button
+                      onClick={() => setActiveTab('documents')}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                    >
+                      Go to Documents Tab
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setActiveTab('linking')}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                      >
+                        Go to Link Claims Tab
+                      </button>
+                      <p className="text-sm text-gray-500">
+                        All claims must be linked to substantiating references before pack generation
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             )}

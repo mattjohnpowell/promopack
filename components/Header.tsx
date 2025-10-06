@@ -46,16 +46,27 @@ export default function Header() {
                 </Link>
               </div>
             </div>
+            <Link href="/templates" className="text-pharma-slate hover:text-pharma-blue transition-colors">
+              Templates
+            </Link>
             <Link href="/blog" className="text-pharma-slate hover:text-pharma-blue transition-colors">
               Blog
+            </Link>
+            <Link href="/roi-calculator" className="text-pharma-slate hover:text-pharma-blue transition-colors">
+              ROI Calculator
             </Link>
             <Link href="/pricing" className="text-pharma-slate hover:text-pharma-blue transition-colors">
               Pricing
             </Link>
             {session ? (
-              <Link href="/dashboard" className="text-pharma-slate hover:text-pharma-blue transition-colors">
-                Dashboard
-              </Link>
+              <>
+                <Link href="/dashboard" className="text-pharma-slate hover:text-pharma-blue transition-colors">
+                  Dashboard
+                </Link>
+                <Link href="/analytics" className="text-pharma-slate hover:text-pharma-blue transition-colors">
+                  Analytics
+                </Link>
+              </>
             ) : null}
           </nav>
           <div className="flex items-center space-x-4">

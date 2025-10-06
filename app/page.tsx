@@ -61,7 +61,7 @@ export default async function Home() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Link href="/dashboard?demo=true" className="btn-primary text-lg px-8 py-4">
+              <Link href="/demo" className="btn-primary text-lg px-8 py-4">
                 Try Free Demo
               </Link>
               <Link href="/pricing" className="btn-secondary text-lg px-8 py-4">

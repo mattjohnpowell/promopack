@@ -181,6 +181,76 @@ export async function createDocument(projectId: string, name: string, url: strin
   }
 }
 
+export async function deleteDocument(documentId: string) {
+  console.log("Server action: deleteDocument called with:", { documentId })
+
+  const session = await auth()
+  if (!session?.user?.email) {
+    console.error("Server action: deleteDocument - Unauthorized")
+    throw new Error("Unauthorized")
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  })
+
+  if (!user) {
+    console.error("Server action: deleteDocument - User not found")
+    throw new Error("User not found")
+  }
+
+  // Get the document with project to verify ownership and check type
+  const document = await prisma.document.findUnique({
+    where: { id: documentId },
+    include: {
+      project: true,
+    },
+  })
+
+  if (!document) {
+    console.error("Server action: deleteDocument - Document not found")
+    throw new Error("Document not found")
+  }
+
+  // Verify user owns the project
+  if (document.project.userId !== user.id) {
+    console.error("Server action: deleteDocument - Access denied")
+    throw new Error("Access denied")
+  }
+
+  const projectId = document.projectId
+  const isSourceDocument = document.type === "SOURCE"
+
+  console.log("Server action: deleteDocument - Deleting document and related data...")
+
+  try {
+    // If it's a source document, delete all claims for this project
+    // (since claims are extracted from source documents)
+    if (isSourceDocument) {
+      console.log("Server action: deleteDocument - Source document detected, deleting all claims...")
+      await prisma.claim.deleteMany({
+        where: { projectId },
+      })
+      console.log("Server action: deleteDocument - All claims deleted")
+    }
+
+    // Delete the document (links will be cascaded automatically due to schema)
+    await prisma.document.delete({
+      where: { id: documentId },
+    })
+
+    console.log("Server action: deleteDocument - Document deleted successfully")
+
+    // Revalidate the project page
+    revalidatePath(`/projects/${projectId}`)
+
+    return { success: true, deletedClaims: isSourceDocument }
+  } catch (error) {
+    console.error("Server action: deleteDocument - Error deleting document:", error)
+    throw new Error("Failed to delete document")
+  }
+}
+
 export async function createPubMedReference(
   projectId: string,
   pubmedData: {
@@ -322,70 +392,347 @@ export async function extractClaims(projectId: string, options: { autoFindRefere
       throw new Error("Extractor service configuration missing. Please set EXTRACTOR_API_URL and EXTRACTOR_API_KEY environment variables.")
     }
 
-    const response = await fetch(`${extractorApiUrl}/extract-claims`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${extractorApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        document_url: sourceDoc.url,
-      }),
-    })
+    // Retry logic for transient errors (502, 503, 504)
+    let lastError: Error | null = null
+    const maxRetries = 3
+    const retryDelay = 2000 // 2 seconds
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(`Extractor API error: ${response.status} ${response.statusText}. ${errorData.message || ''}`)
-    }
-
-    const data = await response.json()
-
-    if (!data.claims || !Array.isArray(data.claims)) {
-      throw new Error("Invalid response from extractor service: missing or invalid claims array")
-    }
-
-    // Trust the extractor service - claims are verified by the external service
-    console.log(`Extractor service returned ${data.claims.length} claims - treating as verified`)
-
-    // Create claims in database
-    await prisma.claim.createMany({
-      data: data.claims.map((claim: { text: string; page: number }) => ({
-        text: claim.text,
-        page: claim.page,
-        projectId,
-      })),
-    })
-
-    // Auto-link claims to EXISTING reference documents (user-uploaded)
-    await autoLinkClaims(projectId)
-
-    // Audit the links
-    await auditLinks(projectId)
-
-    // Optionally: Auto-find PubMed references for claims
-    let autoFindResult
-    if (options.autoFindReferences) {
-      console.log('Auto-finding PubMed references enabled...')
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        autoFindResult = await autoFindAllReferences(projectId)
-        console.log(`Auto-find complete: ${autoFindResult.totalSuggested} references suggested`)
+        console.log(`Calling extractor service (attempt ${attempt}/${maxRetries})...`)
+        
+        const response = await fetch(`${extractorApiUrl}/extract-claims`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${extractorApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            document_url: sourceDoc.url,
+            prompt_version: 'v4_regulatory', // Use new strict regulatory validation
+          }),
+          signal: AbortSignal.timeout(60000), // 60 second timeout
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          
+          // Retry on 502, 503, 504 (gateway/service errors)
+          if ([502, 503, 504].includes(response.status) && attempt < maxRetries) {
+            console.warn(`Extractor service returned ${response.status}, retrying in ${retryDelay}ms...`)
+            await new Promise(resolve => setTimeout(resolve, retryDelay))
+            continue
+          }
+          
+          // Provide user-friendly error messages
+          if (response.status === 502) {
+            throw new Error(`The claim extraction service is temporarily unavailable (502 Bad Gateway). Please try again in a few minutes or contact support if the issue persists.`)
+          } else if (response.status === 503) {
+            throw new Error(`The claim extraction service is currently overloaded (503 Service Unavailable). Please try again shortly.`)
+          } else if (response.status === 504) {
+            throw new Error(`The claim extraction service timed out (504 Gateway Timeout). Your document may be too large. Please try a smaller document or contact support.`)
+          }
+          
+          throw new Error(`Extractor API error: ${response.status} ${response.statusText}. ${errorData.message || ''}`)
+        }
+
+        // Success - break out of retry loop
+        const data = await response.json()
+
+        if (!data.claims || !Array.isArray(data.claims)) {
+          throw new Error("Invalid response from extractor service: missing or invalid claims array")
+        }
+
+        console.log(`Extractor service returned ${data.claims.length} potential claims for review`)
+
+        // Log metadata if available
+        if (data.metadata) {
+          console.log(`Extraction metadata:`, {
+            total: data.metadata.total_claims_extracted,
+            high_confidence: data.metadata.high_confidence_claims,
+            medium_confidence: data.metadata.medium_confidence_claims,
+            low_confidence: data.metadata.low_confidence_claims,
+            processing_time: data.metadata.processing_time_ms,
+            model: data.metadata.model_version,
+            prompt: data.metadata.prompt_version
+          })
+        }
+
+        // Create claims in database with PENDING_REVIEW status
+        // Enhanced v4_regulatory API response fields
+        await prisma.claim.createMany({
+          data: data.claims.map((claim: {
+            text: string;
+            page: number;
+            confidence?: number;
+            suggested_type?: string;
+            reasoning?: string;
+            is_comparative?: boolean;
+            contains_statistics?: boolean;
+            citation_present?: boolean;
+            warnings?: string[] | null;
+          }) => ({
+            text: claim.text,
+            page: claim.page,
+            projectId,
+            status: 'PENDING_REVIEW',
+
+            // AI extraction metadata (v4_regulatory fields)
+            extractionConfidence: claim.confidence,
+            extractionReasoning: claim.reasoning,
+            suggestedType: claim.suggested_type as any,
+            isComparative: claim.is_comparative,
+            containsStatistics: claim.contains_statistics,
+            citationPresent: claim.citation_present,
+            warnings: claim.warnings ? JSON.stringify(claim.warnings) : null,
+          })),
+        })
+
+        // DO NOT auto-link or audit yet - user needs to review claims first
+        // These will happen after user approves claims
+
+        // Revalidate the project page
+        revalidatePath(`/projects/${projectId}`)
+
+        return {
+          message: `Extracted ${data.claims.length} potential claims. Please review them to confirm which are true regulatory claims.`,
+          claimsCount: data.claims.length,
+          needsReview: true,
+        }
       } catch (error) {
-        console.error('Auto-find references failed:', error)
-        // Don't fail the entire operation if auto-find fails
+        lastError = error as Error
+        // If this was the last attempt, throw
+        if (attempt === maxRetries) {
+          throw error
+        }
+        // Otherwise, continue to next retry
       }
     }
 
-    // Revalidate the project page
-    revalidatePath(`/projects/${projectId}`)
-
-    return {
-      message: `Extracted ${data.claims.length} verified claims from source document`,
-      claimsCount: data.claims.length,
-      autoFindResult
-    }
+    // If we get here, all retries failed
+    throw lastError || new Error("Failed to extract claims after multiple attempts")
   } catch (error) {
     console.error("Error extracting claims:", error)
-    throw new Error("Failed to extract claims")
+    // Re-throw the error with the original message if it's already user-friendly
+    if (error instanceof Error && error.message.includes('temporarily unavailable')) {
+      throw error
+    }
+    throw new Error(`Failed to extract claims: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
+
+// NEW: Claim review actions
+export async function reviewClaim(
+  claimId: string,
+  action: 'approve' | 'reject' | 'edit',
+  data?: {
+    claimType?: string
+    rejectionReason?: string
+    editedText?: string
+  }
+) {
+  const session = await auth()
+  if (!session?.user?.email) {
+    throw new Error("Unauthorized")
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  })
+
+  if (!user) {
+    throw new Error("User not found")
+  }
+
+  // Verify claim belongs to user's project
+  const claim = await prisma.claim.findFirst({
+    where: {
+      id: claimId,
+      project: {
+        userId: user.id,
+      },
+    },
+  })
+
+  if (!claim) {
+    throw new Error("Claim not found or access denied")
+  }
+
+  try {
+    let updateData: any = {
+      reviewedAt: new Date(),
+      reviewedBy: user.id,
+    }
+
+    switch (action) {
+      case 'approve':
+        updateData.status = 'APPROVED'
+        if (data?.claimType) {
+          updateData.claimType = data.claimType
+        }
+        break
+
+      case 'reject':
+        updateData.status = 'REJECTED'
+        updateData.rejectionReason = data?.rejectionReason || 'Not a regulatory claim'
+        break
+
+      case 'edit':
+        updateData.status = 'EDITED'
+        updateData.editedText = data?.editedText
+        if (data?.claimType) {
+          updateData.claimType = data.claimType
+        }
+        break
+    }
+
+    const updatedClaim = await prisma.claim.update({
+      where: { id: claimId },
+      data: updateData,
+    })
+
+    // If approved or edited, trigger auto-linking for this specific claim
+    if (action === 'approve' || action === 'edit') {
+      await autoLinkSingleClaim(claimId)
+    }
+
+    revalidatePath(`/projects/${claim.projectId}/claims`)
+
+    return { success: true, claim: updatedClaim }
+  } catch (error) {
+    console.error("Error reviewing claim:", error)
+    throw new Error("Failed to review claim")
+  }
+}
+
+// NEW: Bulk review claims
+export async function bulkReviewClaims(
+  claimIds: string[],
+  action: 'approve' | 'reject',
+  data?: {
+    rejectionReason?: string
+  }
+) {
+  const session = await auth()
+  if (!session?.user?.email) {
+    throw new Error("Unauthorized")
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  })
+
+  if (!user) {
+    throw new Error("User not found")
+  }
+
+  try {
+    let updateData: any = {
+      reviewedAt: new Date(),
+      reviewedBy: user.id,
+    }
+
+    if (action === 'approve') {
+      updateData.status = 'APPROVED'
+    } else if (action === 'reject') {
+      updateData.status = 'REJECTED'
+      updateData.rejectionReason = data?.rejectionReason || 'Not a regulatory claim'
+    }
+
+    // Update all claims
+    const result = await prisma.claim.updateMany({
+      where: {
+        id: { in: claimIds },
+        project: {
+          userId: user.id,
+        },
+      },
+      data: updateData,
+    })
+
+    // If approved, trigger auto-linking for approved claims
+    if (action === 'approve') {
+      for (const claimId of claimIds) {
+        await autoLinkSingleClaim(claimId)
+      }
+    }
+
+    // Get the project ID to revalidate
+    const firstClaim = await prisma.claim.findFirst({
+      where: { id: claimIds[0] },
+    })
+
+    if (firstClaim) {
+      revalidatePath(`/projects/${firstClaim.projectId}/claims`)
+    }
+
+    return { success: true, count: result.count }
+  } catch (error) {
+    console.error("Error bulk reviewing claims:", error)
+    throw new Error("Failed to bulk review claims")
+  }
+}
+
+// NEW: Auto-link a single claim (called after approval)
+async function autoLinkSingleClaim(claimId: string) {
+  const claim = await prisma.claim.findUnique({
+    where: { id: claimId },
+    include: {
+      project: {
+        include: {
+          documents: {
+            where: { type: 'REFERENCE' },
+          },
+        },
+      },
+    },
+  })
+
+  if (!claim || claim.project.documents.length === 0) {
+    return
+  }
+
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  })
+
+  try {
+    const claimText = claim.editedText || claim.text
+
+    // Use OpenAI to find best matching document
+    for (const doc of claim.project.documents) {
+      const docInfo = `${doc.title || doc.name}\n${doc.abstract || ''}`
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a medical evidence expert. Determine if the reference document supports the claim. Respond with only a number from 0.0 to 1.0 representing relevance (0=not relevant, 1=highly relevant)."
+          },
+          {
+            role: "user",
+            content: `Claim: "${claimText}"\n\nReference: ${docInfo}\n\nRelevance score:`
+          }
+        ],
+        temperature: 0.3,
+      })
+
+      const scoreText = response.choices[0]?.message?.content?.trim() || "0"
+      const score = parseFloat(scoreText)
+
+      // Link if relevance is above threshold
+      if (score >= 0.6) {
+        await prisma.link.create({
+          data: {
+            claimId: claim.id,
+            documentId: doc.id,
+          },
+        }).catch(() => {}) // Ignore if link already exists
+      }
+    }
+  } catch (error) {
+    console.error("Error auto-linking single claim:", error)
   }
 }
 
@@ -599,14 +946,17 @@ export async function generatePack(projectId: string) {
     throw new Error("Project not found or access denied")
   }
 
-  // PMCPA Compliance Validation
-  const unlinkedClaims = project.claims.filter(claim => claim.links.length === 0)
-  if (unlinkedClaims.length > 0) {
-    throw new Error(`Cannot generate pack: ${unlinkedClaims.length} claim(s) are not linked to reference documents. All claims must be substantiated for PMCPA compliance.`)
+  // UPDATED: Only include APPROVED and EDITED claims in PDF
+  const approvedClaims = project.claims.filter(c => c.status === 'APPROVED' || c.status === 'EDITED')
+
+  if (approvedClaims.length === 0) {
+    throw new Error("Cannot generate pack: No approved claims found. Please review and approve claims before generating the pack.")
   }
 
-  if (project.claims.length === 0) {
-    throw new Error("Cannot generate pack: No claims have been extracted from the source document.")
+  // PMCPA Compliance Validation - check only approved claims
+  const unlinkedClaims = approvedClaims.filter(claim => claim.links.length === 0)
+  if (unlinkedClaims.length > 0) {
+    throw new Error(`Cannot generate pack: ${unlinkedClaims.length} approved claim(s) are not linked to reference documents. All approved claims must be substantiated for PMCPA compliance.`)
   }
 
   const sourceDoc = project.documents.find(d => d.type === "SOURCE")
@@ -660,13 +1010,17 @@ export async function generatePack(projectId: string) {
     })
     yPosition -= 20
 
-    // Claims and links
+    // Claims and links (only approved/edited claims)
     addText(`Claims and Links:`, 14)
     yPosition -= 10
 
-    project.claims.forEach(claim => {
-      addText(`Claim: ${claim.text}`)
+    approvedClaims.forEach(claim => {
+      const claimText = claim.editedText || claim.text
+      addText(`Claim: ${claimText}`)
       addText(`Page: ${claim.page}`)
+      if (claim.claimType) {
+        addText(`Type: ${claim.claimType}`)
+      }
       const linkedRefs = claim.links.map(link => link.document.name).join(', ') || 'None'
       addText(`Linked References: ${linkedRefs}`)
       yPosition -= 10
@@ -719,7 +1073,8 @@ export async function autoLinkClaims(projectId: string) {
     throw new Error("Project not found or access denied")
   }
 
-  const claims = project.claims
+  // UPDATED: Only process APPROVED or EDITED claims
+  const claims = project.claims.filter(c => c.status === 'APPROVED' || c.status === 'EDITED')
   const referenceDocs = project.documents.filter(d => d.type === "REFERENCE")
 
   if (claims.length === 0 || referenceDocs.length === 0) {

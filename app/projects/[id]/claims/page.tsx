@@ -2,6 +2,7 @@ import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/utils/db"
 import { ClaimsPageContent } from "./ClaimsPageContent"
+import { isDemoMode, getDemoProject } from "@/lib/demo-data"
 
 interface ClaimsPageProps {
   params: Promise<{
@@ -12,6 +13,20 @@ interface ClaimsPageProps {
 export default async function ClaimsPage({ params }: ClaimsPageProps) {
   const resolvedParams = await params
 
+  // Check if this is demo mode
+  if (isDemoMode(resolvedParams.id)) {
+    const demoProject = getDemoProject()
+    return (
+      <ClaimsPageContent
+        projectId={demoProject.id}
+        claims={demoProject.claims}
+        projectName={demoProject.name}
+        isDemo={true}
+      />
+    )
+  }
+
+  // Regular authenticated flow
   const session = await auth()
 
   if (!session?.user?.email) {
@@ -55,6 +70,7 @@ export default async function ClaimsPage({ params }: ClaimsPageProps) {
       projectId={project.id}
       claims={project.claims}
       projectName={project.name}
+      isDemo={false}
     />
   )
 }

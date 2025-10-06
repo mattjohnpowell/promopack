@@ -5,7 +5,7 @@ import { Toaster } from "react-hot-toast";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { GoogleAnalytics } from "@/lib/analytics";
+import { GoogleAnalytics } from "@/lib/google-analytics";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
