@@ -104,6 +104,9 @@ interface ProjectContentProps {
 }
 
 export function ProjectContent({ project, isDemo }: ProjectContentProps) {
+  const [showExtractedClaims, setShowExtractedClaims] = useState(false)
+  const [claimsConfirmed, setClaimsConfirmed] = useState(false)
+
   // Separate suggested and accepted references
   const suggestedReferences = useMemo(() => {
     return project.documents.filter(
@@ -508,9 +511,97 @@ export function ProjectContent({ project, isDemo }: ProjectContentProps) {
                         <ExtractClaimsButton
                           projectId={project.id}
                           hasSourceDocument={project.documents.some(doc => doc.type === 'SOURCE')}
+                          onExtractionComplete={() => {
+                            setShowExtractedClaims(true)
+                            window.location.reload()
+                          }}
                         />
                       </div>
                     </div>
+
+                    {/* Show extracted claims inline */}
+                    {project.claims.length > 0 && (
+                      <div className="mt-6 border-t border-blue-200 pt-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h5 className="text-md font-semibold text-gray-900">Extracted Claims ({project.claims.length})</h5>
+                          <button
+                            onClick={() => setShowExtractedClaims(!showExtractedClaims)}
+                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                          >
+                            {showExtractedClaims ? 'Hide Claims' : 'Show Claims'}
+                          </button>
+                        </div>
+
+                        {showExtractedClaims && (
+                          <>
+                            <div className="space-y-3 max-h-96 overflow-y-auto mb-6">
+                              {project.claims.map((claim, index) => (
+                                <div key={claim.id} className="p-4 bg-white border border-blue-200 rounded-lg">
+                                  <div className="flex items-start gap-3">
+                                    <span className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-semibold">
+                                      {index + 1}
+                                    </span>
+                                    <div className="flex-1">
+                                      <p className="text-sm text-gray-900">{claim.text}</p>
+                                      <p className="text-xs text-gray-500 mt-1">Page {claim.page}</p>
+                                      {claim.needsReview && (
+                                        <div className="mt-2 flex items-center gap-1 text-xs text-amber-600">
+                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                          </svg>
+                                          Needs Review
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Confirmation Checkbox */}
+                            <div className="p-4 bg-amber-50 border-2 border-amber-300 rounded-lg">
+                              <div className="flex items-start gap-3">
+                                <input
+                                  type="checkbox"
+                                  id="claims-confirmation"
+                                  checked={claimsConfirmed}
+                                  onChange={(e) => setClaimsConfirmed(e.target.checked)}
+                                  className="w-5 h-5 text-blue-600 bg-white border-amber-400 rounded focus:ring-blue-500 mt-0.5 flex-shrink-0"
+                                />
+                                <div className="flex-1">
+                                  <label htmlFor="claims-confirmation" className="text-sm font-semibold text-amber-900 cursor-pointer select-none">
+                                    I confirm that I have reviewed all extracted claims and they are complete and accurate
+                                  </label>
+                                  <p className="text-xs text-amber-800 mt-1">
+                                    <strong>Important:</strong> By checking this box, you acknowledge that you have verified all claims extracted from your source document.
+                                    You are responsible for ensuring no claims were missed or incorrectly extracted. This confirmation is required before generating your compliance pack.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {!claimsConfirmed && (
+                              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                <p className="text-xs text-blue-800">
+                                  <strong>Next steps:</strong> Once you confirm the claims are complete, proceed to the &quot;Link Claims&quot; tab to connect each claim with substantiating references.
+                                </p>
+                              </div>
+                            )}
+
+                            {claimsConfirmed && (
+                              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <p className="text-xs text-green-800 flex items-center gap-2">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                  Claims confirmed. You can now proceed to link claims to references.
+                                </p>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 

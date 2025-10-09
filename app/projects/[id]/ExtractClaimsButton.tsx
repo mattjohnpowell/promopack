@@ -1,20 +1,19 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { extractClaims } from "@/app/actions"
 import toast from "react-hot-toast"
 
 interface ExtractClaimsButtonProps {
   projectId: string
   hasSourceDocument: boolean
+  onExtractionComplete?: () => void
 }
 
-export function ExtractClaimsButton({ projectId, hasSourceDocument }: ExtractClaimsButtonProps) {
+export function ExtractClaimsButton({ projectId, hasSourceDocument, onExtractionComplete }: ExtractClaimsButtonProps) {
   const [isExtracting, setIsExtracting] = useState(false)
   const [progress, setProgress] = useState(0)
   const [autoFindRefs, setAutoFindRefs] = useState(true) // Default to enabled
-  const router = useRouter()
 
   const handleExtract = async () => {
     setIsExtracting(true)
@@ -35,8 +34,10 @@ export function ExtractClaimsButton({ projectId, hasSourceDocument }: ExtractCla
 
       toast.success(result.message, { duration: 5000 })
 
-      // Navigate to claims page
-      router.push(`/projects/${projectId}/claims`)
+      // Trigger callback to refresh data and show claims
+      if (onExtractionComplete) {
+        onExtractionComplete()
+      }
     } catch (error) {
       clearInterval(progressInterval)
       toast.error(error instanceof Error ? error.message : "Failed to extract claims")
