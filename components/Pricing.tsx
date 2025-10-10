@@ -62,7 +62,7 @@ export function PricingComponent() {
         
         <div className="grid md:grid-cols-3 gap-6">
           {tiers.map((tier) => (
-            <div key={tier.id} className={g-white rounded-lg p-8 shadow-lg \$\{tier.popular ? 'ring-2 ring-blue-600' : ''\}}>
+            <div key={tier.id} className={`bg-white rounded-lg p-8 shadow-lg ${tier.popular ? 'ring-2 ring-blue-600' : ''}`}>
               <h3 className="text-2xl font-bold mb-2">{tier.name}</h3>
               <div className="text-4xl font-bold mb-4">£{tier.price}<span className="text-lg text-gray-600">/mo</span></div>
               <ul className="mb-6 space-y-2">
