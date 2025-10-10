@@ -13,21 +13,33 @@ import Stripe from 'stripe';
 
 // Validate that required environment variables are present
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-if (!stripeSecretKey) {
-  throw new Error('Missing required environment variable: STRIPE_SECRET_KEY');
+
+// Create Stripe instance only if key is available
+// This allows the module to be imported during build without throwing
+let stripeInstance: Stripe | null = null;
+
+if (stripeSecretKey) {
+  stripeInstance = new Stripe(stripeSecretKey, {
+    apiVersion: '2025-08-27.basil', // Use latest stable API version
+    typescript: true,
+    appInfo: {
+      name: 'PromoPack',
+      version: '0.1.0',
+    },
+  });
 }
 
 /**
- * Initialized Stripe client instance.
- * Uses the latest API version and includes app metadata.
+ * Get the Stripe client instance.
+ * Throws an error if STRIPE_SECRET_KEY is not configured.
  */
-export const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2025-08-27.basil', // Use latest stable API version
-  typescript: true,
-  appInfo: {
-    name: 'PromoPack',
-    version: '0.1.0',
-  },
+export const stripe = new Proxy({} as Stripe, {
+  get(target, prop) {
+    if (!stripeInstance) {
+      throw new Error('Stripe is not configured. Missing STRIPE_SECRET_KEY environment variable.');
+    }
+    return (stripeInstance as any)[prop];
+  }
 });
 
 /**
