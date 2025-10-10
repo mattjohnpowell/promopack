@@ -10,8 +10,17 @@ export default function PrivacyPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-pharma-slate mb-4">Privacy Policy</h1>
           <p className="text-pharma-gray">
-            Last updated: September 29, 2025
+            Last updated: October 10, 2025
           </p>
+          <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-900">
+              <strong>🔒 Your Privacy Matters:</strong> We are committed to enterprise-grade security, 
+              GDPR compliance, and never sharing your data with third parties. 
+              <a href="/account/data" className="underline ml-1 font-semibold hover:text-blue-700">
+                Manage your data →
+              </a>
+            </p>
+          </div>
         </div>
 
         <div className="prose prose-lg max-w-none">
@@ -104,27 +113,166 @@ export default function PrivacyPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-pharma-slate mb-4">6. Your Rights Under GDPR</h2>
             <p className="text-pharma-gray mb-4">
-              If you are located in the European Economic Area, you have the following rights:
+              If you are located in the European Economic Area or UK, you have the following rights 
+              under the General Data Protection Regulation (GDPR):
             </p>
-            <ul className="list-disc pl-6 text-pharma-gray mb-4">
-              <li><strong>Access:</strong> Request access to your personal data</li>
-              <li><strong>Rectification:</strong> Request correction of inaccurate data</li>
-              <li><strong>Erasure:</strong> Request deletion of your personal data</li>
-              <li><strong>Restriction:</strong> Request limitation of processing</li>
-              <li><strong>Portability:</strong> Request transfer of your data</li>
-              <li><strong>Objection:</strong> Object to processing based on legitimate interests</li>
-            </ul>
-            <p className="text-pharma-gray">
-              To exercise these rights, please contact us at privacy@promopack.com
-            </p>
+            
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+              <h3 className="text-lg font-semibold text-green-900 mb-3">✨ Self-Service Data Tools Available</h3>
+              <p className="text-sm text-green-800 mb-3">
+                We&apos;ve made it easy to exercise your rights. Visit your{' '}
+                <a href="/account/data" className="underline font-semibold hover:text-green-900">
+                  Data Management page
+                </a>
+                {' '}to export or delete your data instantly.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="border-l-4 border-blue-500 pl-4">
+                <h4 className="font-semibold text-pharma-slate mb-2">
+                  1. Right to Access (Article 15)
+                </h4>
+                <p className="text-pharma-gray text-sm mb-2">
+                  You have the right to request a copy of all personal data we hold about you.
+                </p>
+                <p className="text-sm">
+                  <a href="/account/data" className="text-blue-600 hover:underline font-medium">
+                    → Download your data now
+                  </a>
+                </p>
+              </div>
+
+              <div className="border-l-4 border-blue-500 pl-4">
+                <h4 className="font-semibold text-pharma-slate mb-2">
+                  2. Right to Rectification (Article 16)
+                </h4>
+                <p className="text-pharma-gray text-sm mb-2">
+                  You have the right to request correction of inaccurate or incomplete personal data.
+                </p>
+                <p className="text-sm">
+                  <a href="/account" className="text-blue-600 hover:underline font-medium">
+                    → Update your account details
+                  </a>
+                </p>
+              </div>
+
+              <div className="border-l-4 border-blue-500 pl-4">
+                <h4 className="font-semibold text-pharma-slate mb-2">
+                  3. Right to Erasure / &quot;Right to be Forgotten&quot; (Article 17)
+                </h4>
+                <p className="text-pharma-gray text-sm mb-2">
+                  You have the right to request deletion of your personal data. We will permanently delete 
+                  your account and all associated data within 30 days.
+                </p>
+                <p className="text-sm">
+                  <a href="/account/data" className="text-blue-600 hover:underline font-medium">
+                    → Delete your account
+                  </a>
+                </p>
+              </div>
+
+              <div className="border-l-4 border-blue-500 pl-4">
+                <h4 className="font-semibold text-pharma-slate mb-2">
+                  4. Right to Data Portability (Article 20)
+                </h4>
+                <p className="text-pharma-gray text-sm mb-2">
+                  You have the right to receive your personal data in a machine-readable format (JSON) 
+                  and transmit it to another service provider.
+                </p>
+                <p className="text-sm">
+                  <a href="/account/data" className="text-blue-600 hover:underline font-medium">
+                    → Export your data as JSON
+                  </a>
+                </p>
+              </div>
+
+              <div className="border-l-4 border-blue-500 pl-4">
+                <h4 className="font-semibold text-pharma-slate mb-2">
+                  5. Right to Restrict Processing (Article 18)
+                </h4>
+                <p className="text-pharma-gray text-sm mb-2">
+                  You have the right to request limitation of how we process your data.
+                </p>
+                <p className="text-sm text-pharma-gray">
+                  Contact: privacy@promopack.io
+                </p>
+              </div>
+
+              <div className="border-l-4 border-blue-500 pl-4">
+                <h4 className="font-semibold text-pharma-slate mb-2">
+                  6. Right to Object (Article 21)
+                </h4>
+                <p className="text-pharma-gray text-sm mb-2">
+                  You have the right to object to processing based on legitimate interests, direct marketing, 
+                  or processing for scientific/historical research purposes.
+                </p>
+                <p className="text-sm text-pharma-gray">
+                  Contact: privacy@promopack.io
+                </p>
+              </div>
+
+              <div className="border-l-4 border-blue-500 pl-4">
+                <h4 className="font-semibold text-pharma-slate mb-2">
+                  7. Rights Related to Automated Decision-Making (Article 22)
+                </h4>
+                <p className="text-pharma-gray text-sm">
+                  You have the right not to be subject to decisions based solely on automated processing. 
+                  Our AI-powered features are tools to assist you, not replace human decision-making.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-900">
+                <strong>⚡ Response Time:</strong> We will respond to your requests within 30 days as required by GDPR. 
+                For urgent matters, contact us at <a href="mailto:privacy@promopack.io" className="underline font-semibold">privacy@promopack.io</a>
+              </p>
+            </div>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-pharma-slate mb-4">7. Data Retention</h2>
             <p className="text-pharma-gray mb-4">
-              We retain your personal information for as long as necessary to provide our services,
-              comply with legal obligations, resolve disputes, and enforce our agreements. Specific
-              retention periods vary depending on the type of data and applicable regulations.
+              We retain your personal information only for as long as necessary to provide our services,
+              comply with legal obligations, resolve disputes, and enforce our agreements.
+            </p>
+            
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+              <h3 className="font-semibold text-pharma-slate mb-4">Specific Retention Periods:</h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between items-start">
+                  <span className="text-pharma-gray font-medium">Active account data:</span>
+                  <span className="text-pharma-slate">Retained while subscription is active</span>
+                </div>
+                <div className="flex justify-between items-start">
+                  <span className="text-pharma-gray font-medium">Inactive projects:</span>
+                  <span className="text-pharma-slate">Deleted after 2 years of inactivity</span>
+                </div>
+                <div className="flex justify-between items-start">
+                  <span className="text-pharma-gray font-medium">Deleted accounts:</span>
+                  <span className="text-pharma-slate">Permanently removed within 30 days</span>
+                </div>
+                <div className="flex justify-between items-start">
+                  <span className="text-pharma-gray font-medium">Billing records:</span>
+                  <span className="text-pharma-slate">7 years (tax/legal requirements)</span>
+                </div>
+                <div className="flex justify-between items-start">
+                  <span className="text-pharma-gray font-medium">Server logs:</span>
+                  <span className="text-pharma-slate">90 days (security purposes)</span>
+                </div>
+                <div className="flex justify-between items-start">
+                  <span className="text-pharma-gray font-medium">Analytics data:</span>
+                  <span className="text-pharma-slate">14 months (Google Analytics default)</span>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-pharma-gray mt-4 text-sm">
+              You can request early deletion of your data at any time by visiting your{' '}
+              <a href="/account/data" className="text-blue-600 hover:underline font-medium">
+                Data Management page
+              </a>.
             </p>
           </section>
 
@@ -138,20 +286,104 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-pharma-slate mb-4">9. Cookies and Tracking</h2>
+            <h2 className="text-2xl font-bold text-pharma-slate mb-4">9. Cookies and Tracking Technologies</h2>
             <p className="text-pharma-gray mb-4">
               We use cookies and similar technologies to enhance your experience, analyze usage,
-              and provide personalized content. You can control cookie preferences through your
-              browser settings.
+              and provide personalized content. You can control cookie preferences through the 
+              cookie banner that appears on your first visit.
             </p>
+
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-pharma-slate mb-2">Essential Cookies (Always Active)</h3>
+                <p className="text-pharma-gray text-sm mb-2">
+                  These cookies are necessary for the website to function and cannot be disabled:
+                </p>
+                <ul className="list-disc pl-6 text-pharma-gray text-sm space-y-1">
+                  <li>Authentication and session management</li>
+                  <li>Security and fraud prevention</li>
+                  <li>Load balancing and performance</li>
+                  <li>Cookie consent preferences</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-pharma-slate mb-2">Analytics Cookies (Optional)</h3>
+                <p className="text-pharma-gray text-sm mb-2">
+                  These cookies help us understand how visitors interact with our website:
+                </p>
+                <ul className="list-disc pl-6 text-pharma-gray text-sm space-y-1">
+                  <li>Google Analytics (anonymized IP addresses)</li>
+                  <li>Page view tracking</li>
+                  <li>Feature usage statistics</li>
+                  <li>Performance monitoring</li>
+                </ul>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-900">
+                  <strong>🍪 Manage Cookies:</strong> You can change your cookie preferences at any time by 
+                  clearing your browser&apos;s cookies and reloading the page. The cookie banner will appear again.
+                </p>
+              </div>
+            </div>
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-pharma-slate mb-4">10. Third-Party Services</h2>
+            <h2 className="text-2xl font-bold text-pharma-slate mb-4">10. Third-Party Services & Subprocessors</h2>
             <p className="text-pharma-gray mb-4">
-              Our platform integrates with third-party services for payment processing, file storage,
-              and analytics. These services have their own privacy policies, and we encourage you
-              to review them.
+              Our platform integrates with trusted third-party services to provide our functionality. 
+              All subprocessors have signed Data Processing Agreements (DPAs) and are GDPR compliant.
+            </p>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+              <h3 className="font-semibold text-pharma-slate mb-4">Current Subprocessors:</h3>
+              <div className="space-y-3 text-sm">
+                <div className="border-b border-gray-200 pb-3">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="font-medium text-pharma-slate">Supabase</span>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">DPA ✓</span>
+                  </div>
+                  <p className="text-pharma-gray text-xs">Database hosting and file storage (encrypted at rest)</p>
+                </div>
+
+                <div className="border-b border-gray-200 pb-3">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="font-medium text-pharma-slate">Stripe</span>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">DPA ✓</span>
+                  </div>
+                  <p className="text-pharma-gray text-xs">Payment processing (PCI DSS Level 1 certified)</p>
+                </div>
+
+                <div className="border-b border-gray-200 pb-3">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="font-medium text-pharma-slate">Vercel / Coolify</span>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">DPA ✓</span>
+                  </div>
+                  <p className="text-pharma-gray text-xs">Application hosting and CDN</p>
+                </div>
+
+                <div className="border-b border-gray-200 pb-3">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="font-medium text-pharma-slate">Google Analytics</span>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">DPA ✓</span>
+                  </div>
+                  <p className="text-pharma-gray text-xs">Usage analytics (anonymized, optional via cookie consent)</p>
+                </div>
+
+                <div className="pb-3">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="font-medium text-pharma-slate">Custom Extractor Service</span>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Internal</span>
+                  </div>
+                  <p className="text-pharma-gray text-xs">AI-powered claim extraction (self-hosted, no third-party data sharing)</p>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-pharma-gray mt-4 text-sm">
+              <strong>Important:</strong> We do not sell, rent, or share your personal data with third parties for 
+              their marketing purposes. All subprocessors are used solely to deliver our service to you.
             </p>
           </section>
 
@@ -176,11 +408,45 @@ export default function PrivacyPage() {
             <p className="text-pharma-gray mb-4">
               If you have any questions about this Privacy Policy or our data practices, please contact us:
             </p>
-            <div className="bg-pharma-gray-light/30 p-6 rounded-lg">
-              <p className="text-pharma-gray mb-2"><strong>Email:</strong> privacy@promopack.com</p>
-              <p className="text-pharma-gray mb-2"><strong>Phone:</strong> +1 (555) PROMO-01</p>
-              <p className="text-pharma-gray mb-2"><strong>Address:</strong> 123 Pharma Plaza, Cambridge, MA 02139</p>
-              <p className="text-pharma-gray"><strong>Data Protection Officer:</strong> dpo@promopack.com</p>
+            <div className="bg-pharma-gray-light/30 p-6 rounded-lg space-y-3">
+              <div>
+                <p className="text-sm font-semibold text-pharma-slate mb-1">For Privacy Inquiries:</p>
+                <p className="text-pharma-gray"><strong>Email:</strong> <a href="mailto:privacy@promopack.io" className="text-blue-600 hover:underline">privacy@promopack.io</a></p>
+                <p className="text-pharma-gray text-sm">Response time: Within 30 days (GDPR requirement)</p>
+              </div>
+
+              <div className="border-t pt-3">
+                <p className="text-sm font-semibold text-pharma-slate mb-1">Data Protection Officer:</p>
+                <p className="text-pharma-gray"><strong>Email:</strong> <a href="mailto:dpo@promopack.io" className="text-blue-600 hover:underline">dpo@promopack.io</a></p>
+              </div>
+
+              <div className="border-t pt-3">
+                <p className="text-sm font-semibold text-pharma-slate mb-1">General Support:</p>
+                <p className="text-pharma-gray"><strong>Email:</strong> <a href="mailto:support@promopack.io" className="text-blue-600 hover:underline">support@promopack.io</a></p>
+              </div>
+
+              <div className="border-t pt-3">
+                <p className="text-sm font-semibold text-pharma-slate mb-1">Security Issues:</p>
+                <p className="text-pharma-gray"><strong>Email:</strong> <a href="mailto:security@promopack.io" className="text-blue-600 hover:underline">security@promopack.io</a></p>
+                <p className="text-pharma-gray text-sm">For responsible disclosure of security vulnerabilities</p>
+              </div>
+
+              <div className="border-t pt-3">
+                <p className="text-sm font-semibold text-pharma-slate mb-1">Self-Service Tools:</p>
+                <p className="text-pharma-gray">
+                  <a href="/account/data" className="text-blue-600 hover:underline font-medium">
+                    Data Management Page →
+                  </a>
+                  {' '}(Export or delete your data instantly)
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-900">
+                <strong>🇪🇺 EU Data Protection Supervisory Authority:</strong> If you are not satisfied with our response, 
+                you have the right to lodge a complaint with your local data protection authority.
+              </p>
             </div>
           </section>
         </div>

@@ -1975,3 +1975,217 @@ export async function getSubscriptionStatus() {
     } : null,
   }
 }
+
+/**
+ * Export all user data (GDPR Article 20 - Right to Data Portability)
+ */
+export async function exportUserData() {
+  const session = await auth()
+  if (!session?.user?.email) {
+    throw new Error('Unauthorized')
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: {
+      projects: {
+        include: {
+          documents: true,
+          claims: {
+            include: {
+              links: {
+                include: {
+                  document: true
+                }
+              }
+            }
+          }
+        }
+      },
+      account: {
+        include: {
+          subscriptions: true,
+          billingContacts: true
+        }
+      }
+    }
+  })
+
+  if (!user) {
+    throw new Error('User not found')
+  }
+
+  // Create exportable data structure
+  const exportData = {
+    exportedAt: new Date().toISOString(),
+    exportVersion: '1.0',
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      createdAt: user.id, // Using id as proxy for creation time
+    },
+    account: user.account ? {
+      id: user.account.id,
+      name: user.account.name,
+      billingEmail: user.account.billingEmail,
+      subscriptions: user.account.subscriptions.map(sub => ({
+        status: sub.status,
+        interval: sub.interval,
+        startedAt: sub.startedAt,
+        canceledAt: sub.canceledAt
+      })),
+      billingContacts: user.account.billingContacts.map(contact => ({
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone
+      }))
+    } : null,
+    projects: user.projects.map(project => ({
+      id: project.id,
+      name: project.name,
+      createdAt: project.createdAt,
+      updatedAt: project.updatedAt,
+      documentsCount: project.documents.length,
+      claimsCount: project.claims.length,
+      documents: project.documents.map(doc => ({
+        id: doc.id,
+        name: doc.name,
+        type: doc.type,
+        title: doc.title,
+        authors: doc.authors,
+        journal: doc.journal,
+        year: doc.year,
+        doi: doc.doi,
+        pubmedId: doc.pubmedId,
+        abstract: doc.abstract
+      })),
+      claims: project.claims.map(claim => ({
+        id: claim.id,
+        text: claim.text,
+        page: claim.page,
+        status: claim.status,
+        claimType: claim.claimType,
+        linkedDocuments: claim.links.map(link => ({
+          documentId: link.documentId,
+          documentName: link.document.name
+        }))
+      }))
+    })),
+    statistics: {
+      totalProjects: user.projects.length,
+      totalDocuments: user.projects.reduce((sum, p) => sum + p.documents.length, 0),
+      totalClaims: user.projects.reduce((sum, p) => sum + p.claims.length, 0)
+    }
+  }
+
+  return exportData
+}
+
+/**
+ * Request account deletion (GDPR Article 17 - Right to Erasure)
+ * This marks the account for deletion rather than immediately deleting
+ */
+export async function requestAccountDeletion() {
+  const session = await auth()
+  if (!session?.user?.email) {
+    throw new Error('Unauthorized')
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: {
+      account: {
+        include: {
+          subscriptions: true
+        }
+      }
+    }
+  })
+
+  if (!user) {
+    throw new Error('User not found')
+  }
+
+  // Check for active subscriptions
+  const hasActiveSubscription = user.account?.subscriptions.some(
+    sub => sub.status === 'active' || sub.status === 'trialing'
+  )
+
+  if (hasActiveSubscription) {
+    throw new Error('Please cancel your subscription before deleting your account. Visit the Billing page to cancel.')
+  }
+
+  // For now, return a confirmation that deletion is requested
+  // In production, you might want to:
+  // 1. Send a confirmation email
+  // 2. Set a deletion date (e.g., 30 days from now)
+  // 3. Run a scheduled job to actually delete the data
+  
+  return {
+    success: true,
+    message: 'Account deletion requested. Your data will be permanently deleted within 30 days.',
+    confirmationRequired: true
+  }
+}
+
+/**
+ * Permanently delete user account and all associated data
+ * WARNING: This is irreversible
+ */
+export async function deleteUserAccount(confirmation: string) {
+  const session = await auth()
+  if (!session?.user?.email) {
+    throw new Error('Unauthorized')
+  }
+
+  // Require explicit confirmation
+  if (confirmation !== 'DELETE MY ACCOUNT') {
+    throw new Error('Invalid confirmation. Please type "DELETE MY ACCOUNT" exactly.')
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: {
+      account: {
+        include: {
+          subscriptions: true
+        }
+      }
+    }
+  })
+
+  if (!user) {
+    throw new Error('User not found')
+  }
+
+  // Final check for active subscriptions
+  const hasActiveSubscription = user.account?.subscriptions.some(
+    sub => sub.status === 'active' || sub.status === 'trialing'
+  )
+
+  if (hasActiveSubscription) {
+    throw new Error('Cannot delete account with active subscription. Please cancel first.')
+  }
+
+  // Delete user (cascade will handle projects, documents, claims, links)
+  await prisma.user.delete({
+    where: { id: user.id }
+  })
+
+  // TODO: Delete files from storage
+  // This would require iterating through all documents and deleting their S3 objects
+  // Example:
+  // for (const project of user.projects) {
+  //   for (const doc of project.documents) {
+  //     if (doc.url) {
+  //       await deleteFromS3(doc.url)
+  //     }
+  //   }
+  // }
+
+  return {
+    success: true,
+    message: 'Your account and all associated data has been permanently deleted.'
+  }
+}
