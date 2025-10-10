@@ -200,7 +200,7 @@ export function PricingComponent() {
               </div>
             </div>
             <p className="text-lg text-gray-700 mb-6">
-              At £50/hour, that's <span className="font-bold text-green-600">£750 saved per pack</span>. 
+              At £50/hour, that&apos;s <span className="font-bold text-green-600">£750 saved per pack</span>. 
               The Professional plan pays for itself with just <span className="font-bold">one promotional material</span>.
             </p>
             <button 
@@ -296,7 +296,7 @@ export function PricingComponent() {
               Ready to Get Your Time Back?
             </h2>
             <p className="text-xl mb-8 text-blue-100">
-              Join teams who've already automated their promotional material workflow.
+              Join teams who&apos;ve already automated their promotional material workflow.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button 
